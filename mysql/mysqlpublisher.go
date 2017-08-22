@@ -1,6 +1,7 @@
 package mysql
 
 import(
+	"github.com/FeiniuBus/capgo"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"time"
