@@ -22,11 +22,11 @@ func NewConsumerHandlerRabbitMQ(rabbitOptions RabbitMQOptions) *ConsumerHandlerR
 
 	runtime.SetFinalizer(rtv, rtv.Close)
 
-	return rtv
+	return rtv 
 }
 
 func (this *ConsumerHandlerRabbitMQ) Start() {
-
+	
 }
 
 func (this *ConsumerHandlerRabbitMQ) Close() {
