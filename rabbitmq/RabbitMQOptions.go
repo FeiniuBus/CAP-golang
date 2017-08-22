@@ -1,4 +1,4 @@
-package cap_rabbitmq
+package rabbitmq
 
 type RabbitMQOptions struct {
 	ConnectionTimeoutSecs				int32

@@ -1,11 +1,11 @@
-package cap_rabbitmq
+package rabbitmq
 
 import (
 	"runtime"
-	"../cap"
 	"log"
 	"bytes"
 	"github.com/streadway/amqp"
+	"github.com/FeiniuBus/capgo"	
 )
 
 type RabbitMQConsumerClient struct {
@@ -98,10 +98,12 @@ func (this *RabbitMQConsumerClient) InitClient() {
 func (this *RabbitMQConsumerClient) Close() {
 	if this.Connection != nil {
 		this.Connection.Close()
+		this.Connection = nil
 	}
 
 	if this.Channel != nil {
 		this.Channel.Close()
+		this.Channel = nil
 	}
 }
 
