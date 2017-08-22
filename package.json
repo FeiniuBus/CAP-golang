@@ -10,12 +10,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FeiniuBus/CAP-golang.git"
+    "url": "git+https://github.com/FeiniuBus/capgo.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/FeiniuBus/CAP-golang/issues"
+    "url": "https://github.com/FeiniuBus/capgo/issues"
   },
-  "homepage": "https://github.com/FeiniuBus/CAP-golang#readme"
+  "homepage": "https://github.com/FeiniuBus/capgo#readme"
 }
