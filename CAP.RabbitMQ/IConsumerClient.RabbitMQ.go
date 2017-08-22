@@ -98,10 +98,12 @@ func (this *RabbitMQConsumerClient) InitClient() {
 func (this *RabbitMQConsumerClient) Close() {
 	if this.Connection != nil {
 		this.Connection.Close()
+		this.Connection = nil
 	}
 
 	if this.Channel != nil {
 		this.Channel.Close()
+		this.Channel = nil
 	}
 }
 

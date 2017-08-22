@@ -1,5 +1,5 @@
 package cap
 
 type IConsumerClientFactory interface {
-	Create(group string) *IConsumerClient
+	Create(group string) IConsumerClient
 }

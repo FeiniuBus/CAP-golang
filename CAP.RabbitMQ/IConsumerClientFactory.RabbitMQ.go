@@ -9,8 +9,8 @@ type RabbitMQConsumerClientFactory struct {
 	Options RabbitMQOptions
 }
 
-func NewRabbitConsumeClientFactory(options RabbitMQOptions) RabbitMQConsumerClientFactory {
-	return RabbitMQConsumerClientFactory{
+func NewRabbitConsumeClientFactory(options RabbitMQOptions) *RabbitMQConsumerClientFactory {
+	return &RabbitMQConsumerClientFactory{
 		Options: options ,
 	}
 }
