@@ -1,7 +1,7 @@
-package cap_rabbitmq
+package rabbitmq
 
 import (
-	"../cap"
+	"github.com/FeiniuBus/capgo"
 )
 
 type RabbitMQConsumerClientFactory struct {

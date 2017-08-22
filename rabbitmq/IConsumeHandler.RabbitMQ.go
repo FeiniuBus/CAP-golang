@@ -1,8 +1,8 @@
-package cap_rabbitmq
+package rabbitmq
 
 import (
 	"runtime"
-	"../cap"
+	"github.com/FeiniuBus/capgo"	
 )
 
 type ConsumerHandlerRabbitMQ struct {

@@ -1,11 +1,11 @@
-package cap_rabbitmq
+package rabbitmq
 
 import (
 	"runtime"
-	"../cap"
 	"log"
 	"bytes"
 	"github.com/streadway/amqp"
+	"github.com/FeiniuBus/capgo"	
 )
 
 type RabbitMQConsumerClient struct {
