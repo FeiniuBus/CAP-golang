@@ -1,14 +1,21 @@
 {
-    "name": "capgolang",
-    "version": "1.0.0",
-    "description": "",
-    "author": "feiniubus",
-    "devDependencies": {
-        "gulp": "^3.9.1"
-    },
-    "scripts": {
-        "build":"echo succeed",
-        "restore:capgo":"go get github.com/FeiniuBus/capgo",
-        "restore:cap_mysql":"go get github.com/FeiniuBus/capgo/mysql"
-    }
+  "name": "capgo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "restore":"go get -u github.com/FeiniuBus/capgo && go get -u github.com/FeiniuBus/capgo/mysql",
+    "prebuild":"npm run restore",
+    "build":"go build . && go build ./mysql"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FeiniuBus/CAP-golang.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FeiniuBus/CAP-golang/issues"
+  },
+  "homepage": "https://github.com/FeiniuBus/CAP-golang#readme"
 }
