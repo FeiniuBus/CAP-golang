@@ -26,7 +26,7 @@ func NewConsumerHandlerRabbitMQ(rabbitOptions RabbitMQOptions) *ConsumerHandlerR
 }
 
 func (this *ConsumerHandlerRabbitMQ) Start() {
-	
+
 }
 
 func (this *ConsumerHandlerRabbitMQ) Close() {
