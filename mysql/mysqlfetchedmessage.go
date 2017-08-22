@@ -1,4 +1,4 @@
-package cap_mysql
+package mysql
 
 import (
 	"database/sql"
@@ -29,14 +29,17 @@ func (fetchedMessage *MySqlFetchedMessage) GetMessageType()(messageType int){
 	return fetchedMessage.messageType
 }
 
-func (fectchedMessage *MySqlFetchedMessage) RemoveFromQueue() error{
-	return nil
+func (fetchedMessage *MySqlFetchedMessage) RemoveFromQueue() error{
+	err := fetchedMessage.dbTransaction.Commit()
+	return err
 }
 
-func (fetchMessage *MySqlFetchedMessage) Requeue() error{
-	return nil
+func (fetchedMessage *MySqlFetchedMessage) Requeue() error{
+	err := fetchedMessage.dbTransaction.Rollback()
+	return err
 }
 
-func (fetchedMessage *MySqlFetchedMessage) Dispose(){
-	
+func (fetchedMessage *MySqlFetchedMessage) Dispose() error{
+	err := fetchedMessage.dbConnection.Close()
+	return err
 }

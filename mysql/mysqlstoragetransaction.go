@@ -1,15 +1,34 @@
-package cap_mysql
+package mysql
 
 import(
-	"../CAP"
+	"github.com/FeiniuBus/capgo"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type MySqlStorageTransaction struct
 {
+	Options cap.CapOptions
 	DbConnection *sql.DB;
 	DbTransaction *sql.Tx;
+}
+
+func NewStorageTransaction(options cap.CapOptions) (cap.IStorageTransaction, error) {
+	transaction := &MySqlStorageTransaction{}
+	transaction.Options = options
+	connectionString, err := transaction.Options.GetConnectionString()
+	if err != nil{
+		return nil, err
+	}
+	transaction.DbConnection, err = sql.Open("mysql",connectionString)
+	if err != nil{
+		return nil, err
+	}
+	transaction.DbTransaction, err = transaction.DbConnection.Begin()
+	if err != nil{
+		return nil, err
+	}
+	return transaction,nil
 }
 
 func (transaction *MySqlStorageTransaction) EnqueuePublishedMessage(message *cap.CapPublishedMessage) error{

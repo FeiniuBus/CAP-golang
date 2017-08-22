@@ -8,5 +8,5 @@ type IFetchedMessage interface{
 	RemoveFromQueue() error
 	Requeue() error
 
-	Dispose()
+	Dispose() error
 }

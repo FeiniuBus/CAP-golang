@@ -1,0 +1,14 @@
+{
+    "name": "capgolang",
+    "version": "1.0.0",
+    "description": "",
+    "author": "feiniubus",
+    "devDependencies": {
+        "gulp": "^3.9.1"
+    },
+    "scripts": {
+        "build":"echo succeed",
+        "restore:capgo":"go get github.com/FeiniuBus/capgo",
+        "restore:cap_mysql":"go get github.com/FeiniuBus/capgo/mysql"
+    }
+}

@@ -2,9 +2,9 @@ package cap
 
 type IStorageConnection interface{
 
-	CreateTransaction() IStorageTransaction;
+	CreateTransaction() (IStorageTransaction,error);
 
-	FetchNextMessage(dbConnection interface{}) (IFetchedMessage,error);
+	FetchNextMessage() (IFetchedMessage,error);
 
 	GetFailedPublishedMessages() ([]*CapPublishedMessage,error);
 
