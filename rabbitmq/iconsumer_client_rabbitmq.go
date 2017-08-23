@@ -162,3 +162,11 @@ func handleReceive(client *RabbitMQConsumerClient, deliveries <-chan amqp.Delive
 func (this *RabbitMQConsumerClient) Commit(context cap.MessageContext) {
 	this.Channel.Ack(context.Tag, false)
 }
+
+func (this *RabbitMQConsumerClient) SetOnReceive(onReceive cap.ReceiveHanlder) {
+	this.OnReceive = onReceive
+}
+
+func (this *RabbitMQConsumerClient) SetOnError(onError cap.ErrorHanlder) {
+	this.OnError = onError
+}
