@@ -12,7 +12,7 @@ type MySqlPublisher struct{
 	IsCapOpenedTrans bool
 }
 
-func NewPublisher(options cap.CapOptions) *MySqlPublisher{
+func NewPublisher(options cap.CapOptions) cap.IPublisher{
 	pubisher := &MySqlPublisher{}
 	pubisher.Options = options
 	return pubisher

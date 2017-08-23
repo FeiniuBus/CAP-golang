@@ -64,10 +64,7 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 		return nil,nil
 	}
 	
-	fetchedMessage := &MySqlFetchedMessage{}
-	fetchedMessage.dbConnection = conn
-	fetchedMessage.dbTransaction = transaction
-
+	fetchedMessage := NewFetchedMessage(messageId,messageType,conn,transaction)
 
 	return fetchedMessage,nil 
 }
