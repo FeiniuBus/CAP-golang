@@ -12,7 +12,7 @@ func NewBootstrapper(
 	register *CallbackRegister,
 	connectionFactory *StorageConnectionFactory,
 	) *Bootstrapper {
-		
+
 	rtv := &Bootstrapper{
 		Servers: make([]IProcessServer, 0) ,
 		CapOptions: capOptions,
@@ -20,12 +20,12 @@ func NewBootstrapper(
 		ConnectionFactory: connectionFactory,
 	}
 
-	initBootstrpper(rtv)
+	initBootstrapper(rtv)
 
 	return rtv
 }
 
-func initBootstrpper(bootstrapper *Bootstrapper) {
+func initBootstrapper(bootstrapper *Bootstrapper) {
 
 }
 
@@ -39,4 +39,8 @@ func (this *Bootstrapper) Close() {
 	for _, server := range this.Servers {
 		server.Close()
 	}
+}
+
+func (this *Bootstrapper) Route(group, name string, cb CallbackInterface) {
+	this.Register.Add(group, name, cb)
 }
