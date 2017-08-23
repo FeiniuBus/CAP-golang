@@ -14,12 +14,13 @@ func Test_Publisher(t *testing.T) {
 	options := cap.CapOptions{}
 	connectionString := "root:kge2001@tcp(192.168.206.129:3306)/FeiniuCAP?charset=utf8"
 	options.UseMySql(connectionString)
-	connectionFactory := cap.NewPublisherFactory(CreatePublisher)
-	publisher, err := connectionFactory.CreatePublisher(options)
+	publihserFactory := cap.NewPublisherFactory(CreatePublisher)
+	publisher, err := publihserFactory.CreatePublisher(options)
 	if err != nil {
 		panic(err)
 	}
 	conn, err := sql.Open("mysql", connectionString)
+	defer conn.Close()
 	if err != nil {
 		panic(err)
 	}
