@@ -1,18 +1,32 @@
 package cap
 
-type ConsumeHandlerCreateDelegate func () IConsumerHandler
-
 type Bootstrapper struct {
 	Servers							[]IProcessServer
-	ConsumeHandlerDelegate			ConsumeHandlerCreateDelegate 
+	CapOptions						CapOptions
+	Register						*CallbackRegister
+	ConnectionFactory				*StorageConnectionFactory
 }
 
-func NewBootstrapper() *Bootstrapper {
+func NewBootstrapper(
+	capOptions CapOptions, 
+	register *CallbackRegister,
+	connectionFactory *StorageConnectionFactory,
+	) *Bootstrapper {
+		
 	rtv := &Bootstrapper{
 		Servers: make([]IProcessServer, 0) ,
+		CapOptions: capOptions,
+		Register: register,
+		ConnectionFactory: connectionFactory,
 	}
 
+	initBootstrpper(rtv)
+
 	return rtv
+}
+
+func initBootstrpper(bootstrapper *Bootstrapper) {
+
 }
 
 func (this *Bootstrapper) Bootstrap() {
@@ -25,8 +39,4 @@ func (this *Bootstrapper) Close() {
 	for _, server := range this.Servers {
 		server.Close()
 	}
-}
-
-func initServers(bootstrapper *Bootstrapper) {
-
 }

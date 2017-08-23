@@ -5,6 +5,10 @@ import (
 	"github.com/FeiniuBus/capgo"	
 )
 
+const (
+	DefaultPollingDelay = 60
+)
+
 type ConsumerHandlerRabbitMQ struct {
 	cap.IConsumerHandler
 
@@ -29,7 +33,7 @@ func NewConsumerHandlerRabbitMQ(
 		RabbitOptions: rabbitOptions ,
 		ConsumerClientFactory: clientFactory ,
 		Register: register ,
-		PollingDelay: 60,
+		PollingDelay: DefaultPollingDelay,
 		Done: make(chan bool) ,
 		Clients: make([]cap.IConsumerClient, 0) ,
 		ConnectionFactory: connectionFactory,
