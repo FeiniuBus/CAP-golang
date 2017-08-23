@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"log"
 	"bytes"
+	"fmt"
 	"github.com/streadway/amqp"
 	"github.com/FeiniuBus/capgo"	
 )
@@ -50,7 +51,7 @@ func ConnectString(options *RabbitMQOptions) string {
 	_, err = buffer.WriteString("@")
 	_, err = buffer.WriteString(options.HostName)
 	_, err = buffer.WriteString(":")
-	_, err = buffer.WriteRune(options.Port)
+	_, err = buffer.WriteString(fmt.Sprint(options.Port))
 	_, err = buffer.WriteString("/")
 
 	failOnError(err, "Write connect string fail")
