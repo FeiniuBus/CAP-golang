@@ -9,7 +9,7 @@ type CapReceivedMessage struct{
 	Name string
 	Group string
 	Content string
-	Added int
+	Added int64
 	ExpiresAt int
 	Retries int
 	StatusName string

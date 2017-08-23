@@ -3,13 +3,13 @@ package cap
 type ConsumeHandlerCreateDelegate func () IConsumerHandler
 
 type Bootstrapper struct {
-	Servers							[]cap.IProcessServer
+	Servers							[]IProcessServer
 	ConsumeHandlerDelegate			ConsumeHandlerCreateDelegate 
 }
 
 func NewBootstrapper() *Bootstrapper {
 	rtv := &Bootstrapper{
-		Servers: make([]cap.IProcessServer, 0) ,
+		Servers: make([]IProcessServer, 0) ,
 	}
 
 	return rtv
