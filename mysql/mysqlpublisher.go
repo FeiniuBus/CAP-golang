@@ -1,33 +1,34 @@
 package mysql
 
-import(
-	"github.com/FeiniuBus/capgo"
+import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"time"
+
+	"github.com/FeiniuBus/capgo"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-type MySqlPublisher struct{
-	Options cap.CapOptions
+type MySqlPublisher struct {
+	Options          cap.CapOptions
 	IsCapOpenedTrans bool
 }
 
-func NewPublisher(options cap.CapOptions) cap.IPublisher{
+func NewPublisher(options cap.CapOptions) cap.IPublisher {
 	pubisher := &MySqlPublisher{}
 	pubisher.Options = options
 	return pubisher
 }
 
-func (publihser *MySqlPublisher) Publish(name string, content string, connection interface{}, transaction interface{}) error  {
+func (publihser *MySqlPublisher) Publish(name string, content string, connection interface{}, transaction interface{}) error {
 	var dbConnection *sql.DB
 	var dbTransaction *sql.Tx
-	
+
 	if connection == nil {
 		connectionString, err := publihser.Options.GetConnectionString()
 		if err != nil {
 			return err
 		}
-		dbConnection, err = sql.Open("mysql",connectionString)
+		dbConnection, err = sql.Open("mysql", connectionString)
 		if err != nil {
 			return err
 		}
@@ -36,13 +37,13 @@ func (publihser *MySqlPublisher) Publish(name string, content string, connection
 			return err
 		}
 		publihser.IsCapOpenedTrans = true
-	}else{
+	} else {
 		dbConnection = connection.(*sql.DB)
 		dbTransaction = transaction.(*sql.Tx)
 	}
-	statement := "INSERT INTO `{_options.TableNamePrefix}.published` (`Name`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`)"
+	statement := "INSERT INTO `cap.published` (`Name`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`)"
 	statement += "VALUES(?,?,?,?,?,?)"
-	result, err := dbTransaction.Exec(statement, name, content, 0, time.Now(),nil,"Scheduled")
+	result, err := dbTransaction.Exec(statement, name, content, 0, time.Now(), nil, "Scheduled")
 	if err != nil {
 		return err
 	}
@@ -56,7 +57,7 @@ func (publihser *MySqlPublisher) Publish(name string, content string, connection
 
 	if publihser.IsCapOpenedTrans {
 		err = dbTransaction.Commit()
-		err = dbConnection.Close();
+		err = dbConnection.Close()
 		if err != nil {
 			return err
 		}
