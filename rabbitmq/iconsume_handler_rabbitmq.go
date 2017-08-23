@@ -1,7 +1,6 @@
 package rabbitmq
 
 import (
-	"runtime"
 	"github.com/FeiniuBus/capgo"	
 )
 

@@ -1,7 +1,6 @@
 package rabbitmq
 
 import (
-	"runtime"
 	"log"
 	"bytes"
 	"github.com/streadway/amqp"
