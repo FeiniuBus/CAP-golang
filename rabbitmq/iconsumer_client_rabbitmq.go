@@ -16,6 +16,9 @@ type RabbitMQConsumerClient struct {
 	Options 		*RabbitMQOptions
 	Connection 		*amqp.Connection
 	Channel			*amqp.Channel
+
+	OnReceive		cap.ReceiveHanlder
+	OnError			cap.ErrorHanlder
 }
 
 func failOnError(err error, msg string) {
@@ -144,9 +147,9 @@ func handleReceive(client *RabbitMQConsumerClient, deliveries <-chan amqp.Delive
 						Content: string(delivery.Body),
 						Tag: delivery.DeliveryTag,
 					}
-					
-					if cap.OnReceive != nil {
-						cap.OnReceive(context)
+
+					if client.OnReceive != nil {
+						client.OnReceive(context)
 					}
 
 				case <-done:

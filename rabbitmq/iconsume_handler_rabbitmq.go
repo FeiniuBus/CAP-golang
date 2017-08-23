@@ -10,6 +10,7 @@ type ConsumerHandlerRabbitMQ struct {
 
 	ConsumerClientFactory cap.IConsumerClientFactory
 	RabbitOptions RabbitMQOptions
+	Register *cap.CallbackRegister
 }
 
 func NewConsumerHandlerRabbitMQ(rabbitOptions RabbitMQOptions) *ConsumerHandlerRabbitMQ {
