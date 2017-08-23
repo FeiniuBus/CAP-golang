@@ -1,9 +1,5 @@
 package cap
 
-import (
-	"github.com/FeiniuBus/capgo"
-)
-
 type ConsumeHandlerCreateDelegate func () IConsumerHandler
 
 type Bootstrapper struct {
