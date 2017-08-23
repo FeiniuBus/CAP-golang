@@ -35,8 +35,6 @@ func NewClient(queueName string , options *RabbitMQOptions) *RabbitMQConsumerCli
 		ConnectString: ConnectString(options) ,
 	}
 
-	runtime.SetFinalizer(rtv, rtv.Close)
-
 	rtv.InitClient()
 
 	return rtv

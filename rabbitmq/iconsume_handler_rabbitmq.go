@@ -40,8 +40,6 @@ func NewConsumerHandlerRabbitMQ(
 		CapOptions: capOptions ,
 	}
 
-	runtime.SetFinalizer(rtv, rtv.Close)
-
 	return rtv 
 }
 
