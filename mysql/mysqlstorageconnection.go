@@ -21,7 +21,8 @@ func (connection MySqlStorageConnection) OpenDbConnection() (*sql.DB, error){
 	if err != nil{
 		return nil, err
 	}
-	conn, err := sql.Open("mysql",connectionString)
+	 conn, err := sql.Open("mysql",connectionString)
+	 
 	if err != nil{
 		return nil,err
 	} 
@@ -72,6 +73,7 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.CapPublishedMessage,error){
 	statement := "SELECT * FROM `cap.published` WHERE `StatusName` = 'Failed';"
 	conn, err := connection.OpenDbConnection()
+	defer conn.Close()
 	if err != nil{
 		return nil, err
 	}
@@ -98,6 +100,7 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() (*cap.CapPublishedMessage,error){
 	statement := "SELECT * FROM `cap.published` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
 	conn, err := connection.OpenDbConnection()
+	defer conn.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +118,7 @@ func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() 
 func (connection *MySqlStorageConnection) GetNextReceviedMessageToBeEnqueued() (*cap.CapReceivedMessage,error){
 	statement := "SELECT * FROM `cap.received` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
 	conn, err:=connection.OpenDbConnection()
+	defer conn.Close()
 	if err != nil{
 		return nil, err
 	}
@@ -134,6 +138,7 @@ func (connection *MySqlStorageConnection) GetNextReceviedMessageToBeEnqueued() (
 func (connection *MySqlStorageConnection) GetPublishedMessage(id int) (*cap.CapPublishedMessage, error){
 	statement := "SELECT * FROM `cap.published` WHERE `Id`=?;"
 	conn, err:=connection.OpenDbConnection()
+	defer conn.Close()
 	if err != nil{
 		return nil, err
 	}
@@ -153,6 +158,7 @@ func (connection *MySqlStorageConnection) GetPublishedMessage(id int) (*cap.CapP
 func (connection *MySqlStorageConnection) GetReceivedMessage(id int) (*cap.CapReceivedMessage, error){
 	statement := "SELECT * FROM `cap.received` WHERE `Id`=?;"
 	conn, err:=connection.OpenDbConnection()
+	defer conn.Close()
 	if err != nil{
 		return nil, err
 	}
@@ -173,6 +179,7 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 	statement := "INSERT INTO `{_prefix}.received`(`Name`,`Group`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`)"
 	statement += " VALUES(?,?,?,?,?,?,?);"
 	conn, err:=connection.OpenDbConnection()
+	defer conn.Close()
 	if err != nil{
 		return err
 	}

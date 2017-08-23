@@ -8,6 +8,8 @@ type ProcessingContext struct{
 	IsStopping bool
 }
 
+
+
 func (this *ProcessingContext) WaitAsync(timeout time.Duration){
 	time.Sleep(timeout)
 }
