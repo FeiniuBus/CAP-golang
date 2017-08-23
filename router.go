@@ -34,7 +34,7 @@ func NewCallbackRegister() *CallbackRegister {
 func (this *CallbackRegister) Add(group, name string, callback CallbackInterface) {
 	if v, ok := this.Routers[group]; ok {
 		if _, ok := v[name]; ok {
-			panic("Dupicate group: " + group + " name: " + name)
+			panic("Duplicate group: " + group + " name: " + name)
 		}
 	} else {
 		this.Routers[group] = make(map[string]*CallbackInfo)
