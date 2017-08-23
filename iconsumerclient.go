@@ -8,9 +8,6 @@ type IConsumerClient interface {
 	Listening(timeoutSecs int, ch chan bool)
 	Commit(context MessageContext)
 	Close()
+	SetOnReceive(onReceive ReceiveHanlder)
+	SetOnError(onError ErrorHanlder)
 }
-
-var (
-	OnError ErrorHanlder
-	OnReceive ReceiveHanlder
-)
