@@ -32,8 +32,8 @@ func NewStorageTransaction(options *cap.CapOptions) (cap.IStorageTransaction, er
 }
 
 func (transaction *MySqlStorageTransaction) EnqueuePublishedMessage(message *cap.CapPublishedMessage) error{
-	statement := "INSERT INTO "+ cap.QueueTableName +" VALUES (?,?)"
-	stmt,err := transaction.DbConnection.Prepare(statement)
+	statement := "INSERT INTO `cap.queue` VALUES (?,?)"
+	stmt,err := transaction.DbTransaction.Prepare(statement)
 	if err != nil{
 		return err
 	}
@@ -45,8 +45,8 @@ func (transaction *MySqlStorageTransaction) EnqueuePublishedMessage(message *cap
 }
 
 func (transaction *MySqlStorageTransaction) EnqueueReceivedMessage(message *cap.CapReceivedMessage) error{
-	statement := "INSERT INTO cap.queue VALUES (?,?)"
-	stmt,err := transaction.DbConnection.Prepare(statement)
+	statement := "INSERT INTO `cap.queue` VALUES (?,?)"
+	stmt,err := transaction.DbTransaction.Prepare(statement)
 	if err != nil{
 		return err
 	}
@@ -58,14 +58,14 @@ func (transaction *MySqlStorageTransaction) EnqueueReceivedMessage(message *cap.
 }
 
 func (transaction *MySqlStorageTransaction) UpdatePublishedMessage(message *cap.CapPublishedMessage) error{
-	statement := "UPDATE " + cap.PublishedTableName 
-	statement += " SET `Retries` = ?,`ExpiresAt` = ?,`StatusName`= ?"
+	statement := "UPDATE `cap.published` " 
+	statement += " SET `Retries` = ?,`ExpiresAt` = FROM_UNIXTIME(?),`StatusName`= ?"
 	statement += " WHERE `Id` = ?"
-	stmt,err := transaction.DbConnection.Prepare(statement)
+	stmt,err := transaction.DbTransaction.Prepare(statement)
 	if err != nil{
 		return err
 	}
-	_, err = stmt.Exec(message.Retries, message.ExpiresAt, message.Id)
+	_, err = stmt.Exec(message.Retries, message.ExpiresAt, message.StatusName, message.Id)
 	if err != nil{
 		return err
 	}
@@ -73,14 +73,14 @@ func (transaction *MySqlStorageTransaction) UpdatePublishedMessage(message *cap.
 }
 
 func (transaction *MySqlStorageTransaction) UpdateReceivedMessage(message *cap.CapReceivedMessage) error{
-	statement := "UPDATE " + cap.ReceivedTableName 
-	statement += " SET `Retries` = ?,`ExpiresAt` = ?,`StatusName`= ?"
+	statement := "UPDATE `cap.received`"
+	statement += " SET `Retries` = ?,`ExpiresAt` = FROM_UNIXTIME(?),`StatusName`= ?"
 	statement += " WHERE `Id` = ?"
-	stmt,err := transaction.DbConnection.Prepare(statement)
+	stmt,err := transaction.DbTransaction.Prepare(statement)
 	if err != nil{
 		return err
 	}
-	_, err = stmt.Exec(message.Retries, message.ExpiresAt, message.Id)
+	_, err = stmt.Exec(message.Retries, message.ExpiresAt, message.StatusName, message.Id)
 	if err != nil{
 		return err
 	}

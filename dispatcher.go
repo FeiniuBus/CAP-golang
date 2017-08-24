@@ -11,7 +11,7 @@ type Dispatcher struct{
 }
 
 func NewDispatcher(options *CapOptions, storageConnectionFactory *StorageConnectionFactory) *Dispatcher{
-	 dispatcher := &Dispatcher{StorageConnectionFactory:storageConnectionFactory}	
+	 dispatcher := &Dispatcher{StorageConnectionFactory:storageConnectionFactory, Options:options}	
 	 return dispatcher
 }
 
@@ -32,7 +32,7 @@ func (this Dispatcher) Begin(){
 	for{
 		select{
 		case <- tick :
-			this.ExecutePublishQueuer()
+			go this.ExecutePublishQueuer()
 		default:
 			time.Sleep(1 * time.Second)
 		}

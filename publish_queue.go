@@ -12,14 +12,22 @@ func NewPublishQueuer(storageConnection IStorageConnection) *PublishQueuer{
 func (this *PublishQueuer) Execute() error{
 	var message *CapPublishedMessage
 	var err error
-	transaction,err := this.StorageConnection.CreateTransaction()
 	for{
+		transaction,err := this.StorageConnection.CreateTransaction()
 		message,err = this.StorageConnection.GetNextPublishedMessageToBeEnqueued()
-		if err != nil || message == nil {
+		if err != nil || message == nil || message.Id==0{
+			break
+		}
+		err = transaction.EnqueuePublishedMessage(message)
+		if err != nil {
 			break
 		}
 		message.StatusName = "Enqueued"
 		err = transaction.UpdatePublishedMessage(message)
+		if err != nil {
+			break
+		}
+		err = transaction.Commit()
 		if err != nil {
 			break
 		}
