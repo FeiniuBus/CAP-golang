@@ -112,8 +112,8 @@ func (this *RabbitMQConsumerClient) Subscribe(topics []string) {
 	for _, value := range topics {
 		this.Channel.QueueBind(
 			this.QueueName , 
-			this.Options.TopicExchangeName ,
 			value ,
+			this.Options.TopicExchangeName ,
 			false ,
 			nil)
 	}
