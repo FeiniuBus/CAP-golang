@@ -8,10 +8,10 @@ import (
 )
 
 type MySqlStorageConnection struct {
-	Options cap.CapOptions
+	Options *cap.CapOptions
 }
 
-func NewStorageConnection(options cap.CapOptions) cap.IStorageConnection {
+func NewStorageConnection(options *cap.CapOptions) cap.IStorageConnection {
 	connection := &MySqlStorageConnection{}
 	connection.Options = options
 	return connection
@@ -101,10 +101,17 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() (*cap.CapPublishedMessage, error) {
 	statement := "SELECT * FROM `cap.published` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
 	conn, err := connection.OpenDbConnection()
-	defer conn.Close()
+	
 	if err != nil {
 		return nil, err
 	}
+
+	if conn == nil {
+		return nil, cap.NewCapError("Database connection is nil.")
+	}
+
+	defer conn.Close()
+
 	rows, err := conn.Query(statement)
 	if err != nil {
 		return nil, err
@@ -113,6 +120,7 @@ func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() 
 	if rows.Next() {
 		rows.Scan(&message)
 	}
+	
 	return message, nil
 }
 
@@ -177,14 +185,14 @@ func (connection *MySqlStorageConnection) GetReceivedMessage(id int) (*cap.CapRe
 }
 
 func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapReceivedMessage) error {
-	statement := "INSERT INTO `{_prefix}.received`(`Name`,`Group`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`)"
-	statement += " VALUES(?,?,?,?,?,?,?);"
+	statement := "INSERT INTO `{_prefix}.received`(`Name`,`Group`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`,`MessageId`,`TransactionId`)"
+	statement += " VALUES(?,?,?,?,?,?,?,?,?);"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
 		return err
 	}
-	result, err := conn.Exec(statement, message.Name, message.Group, message.Content, message.Retries, message.Added, message.ExpiresAt, message.StatusName)
+	result, err := conn.Exec(statement, message.Name, message.Group, message.Content, message.Retries, message.Added, message.ExpiresAt, message.StatusName, cap.NewId(),cap.NewId())
 	if err != nil {
 		return err
 	}

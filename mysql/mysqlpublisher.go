@@ -9,11 +9,11 @@ import (
 )
 
 type MySqlPublisher struct {
-	Options          cap.CapOptions
+	Options          *cap.CapOptions
 	IsCapOpenedTrans bool
 }
 
-func NewPublisher(options cap.CapOptions) cap.IPublisher {
+func NewPublisher(options *cap.CapOptions) cap.IPublisher {
 	pubisher := &MySqlPublisher{}
 	pubisher.Options = options
 	return pubisher
