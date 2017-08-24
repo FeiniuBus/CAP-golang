@@ -8,12 +8,12 @@ import(
 
 type MySqlStorageTransaction struct
 {
-	Options cap.CapOptions
+	Options *cap.CapOptions
 	DbConnection *sql.DB;
 	DbTransaction *sql.Tx;
 }
 
-func NewStorageTransaction(options cap.CapOptions) (cap.IStorageTransaction, error) {
+func NewStorageTransaction(options *cap.CapOptions) (cap.IStorageTransaction, error) {
 	transaction := &MySqlStorageTransaction{}
 	transaction.Options = options
 	connectionString, err := transaction.Options.GetConnectionString()

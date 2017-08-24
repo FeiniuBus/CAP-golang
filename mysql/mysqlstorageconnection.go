@@ -8,10 +8,10 @@ import (
 )
 
 type MySqlStorageConnection struct {
-	Options cap.CapOptions
+	Options *cap.CapOptions
 }
 
-func NewStorageConnection(options cap.CapOptions) cap.IStorageConnection {
+func NewStorageConnection(options *cap.CapOptions) cap.IStorageConnection {
 	connection := &MySqlStorageConnection{}
 	connection.Options = options
 	return connection
