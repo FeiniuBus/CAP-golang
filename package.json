@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "restore":"go get -u github.com/FeiniuBus/capgo/... && go get -u github.com/FeiniuBus/capgo/mysql/... && go get -u github.com/FeiniuBus/capgo/rabbitmq/...",
+    "restore":"go get -u github.com/FeiniuBus/capgo && go get -u github.com/FeiniuBus/capgo/mysql && go get -u github.com/FeiniuBus/capgo/rabbitmq",
     "prebuild":"npm run restore",
     "build":"go build . && go build ./mysql && go build ./rabbitmq"
   },

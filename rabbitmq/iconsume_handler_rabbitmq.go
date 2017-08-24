@@ -18,12 +18,12 @@ type ConsumerHandlerRabbitMQ struct {
 	Done					chan bool
 	Clients					[]cap.IConsumerClient
 	ConnectionFactory		*cap.StorageConnectionFactory
-	CapOptions				cap.CapOptions
+	CapOptions				*cap.CapOptions
 }
 
 func NewConsumerHandlerRabbitMQ(
 	rabbitOptions RabbitMQOptions,
-	capOptions cap.CapOptions, 
+	capOptions *cap.CapOptions, 
 	register *cap.CallbackRegister, 
 	connectionFactory *cap.StorageConnectionFactory) *ConsumerHandlerRabbitMQ {
 	clientFactory := NewRabbitConsumeClientFactory(rabbitOptions)
