@@ -177,14 +177,14 @@ func (connection *MySqlStorageConnection) GetReceivedMessage(id int) (*cap.CapRe
 }
 
 func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapReceivedMessage) error {
-	statement := "INSERT INTO `{_prefix}.received`(`Name`,`Group`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`)"
-	statement += " VALUES(?,?,?,?,?,?,?);"
+	statement := "INSERT INTO `{_prefix}.received`(`Name`,`Group`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`,`MessageId`,`TransactionId`)"
+	statement += " VALUES(?,?,?,?,?,?,?,?,?);"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
 		return err
 	}
-	result, err := conn.Exec(statement, message.Name, message.Group, message.Content, message.Retries, message.Added, message.ExpiresAt, message.StatusName)
+	result, err := conn.Exec(statement, message.Name, message.Group, message.Content, message.Retries, message.Added, message.ExpiresAt, message.StatusName, cap.NewId(),cap.NewId())
 	if err != nil {
 		return err
 	}

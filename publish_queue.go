@@ -1,0 +1,31 @@
+package cap
+
+type PublishQueuer struct{
+	StorageConnection IStorageConnection
+}
+
+func NewPublishQueuer(storageConnection IStorageConnection) *PublishQueuer{
+	queuer := &PublishQueuer{StorageConnection:storageConnection}
+	return queuer
+}
+
+func (this *PublishQueuer) Execute() error{
+	var message *CapPublishedMessage
+	var err error
+	transaction,err := this.StorageConnection.CreateTransaction()
+	for{
+		message,err = this.StorageConnection.GetNextPublishedMessageToBeEnqueued()
+		if err != nil || message == nil {
+			break
+		}
+		message.StatusName = "Enqueued"
+		err = transaction.UpdatePublishedMessage(message)
+		if err != nil {
+			break
+		}
+	}
+	if err != nil{
+		return err
+	}
+	return nil
+}
