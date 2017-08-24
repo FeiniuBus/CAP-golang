@@ -1,7 +1,7 @@
 package cap
 
 type CapOptions struct{
-	options []capOption
+	options []*capOption
 }
 
 type capOption struct{
@@ -9,8 +9,14 @@ type capOption struct{
 	Value interface{}
 }
 
+func NewCapOptions() *CapOptions{
+	options := &CapOptions{}
+	options.options = make([]*capOption,0)
+	return options
+}
+
 func (capOptions *CapOptions) Add(name string, value interface{}){
-	option := capOption{}
+	option := &capOption{}
 	option.Name = name
 	option.Value = value
 	capOptions.options = append(capOptions.options, option)

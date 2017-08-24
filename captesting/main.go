@@ -24,7 +24,7 @@ func CreateStorageConnection(options *cap.CapOptions)(cap.IStorageConnection, er
 }
 
 func init(){
-	CapOptions = &cap.CapOptions{}
+	CapOptions = NewCapOptions()
 	ConnectionString = "root:kge2001@tcp(192.168.206.129:3306)/FeiniuCAP?charset=utf8"
 	CapOptions.UseMySql(ConnectionString)
 	PublisherFactory = cap.NewPublisherFactory(CreatePublisher) 

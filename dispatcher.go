@@ -5,12 +5,12 @@ import (
 )
 
 type Dispatcher struct{
-	Options CapOptions
+	Options *CapOptions
 	StorageConnectionFactory *StorageConnectionFactory
 	PublishQueueProccesor *PublishQueuer
 }
 
-func NewDispatcher(options CapOptions, storageConnectionFactory *StorageConnectionFactory) *Dispatcher{
+func NewDispatcher(options *CapOptions, storageConnectionFactory *StorageConnectionFactory) *Dispatcher{
 	 dispatcher := &Dispatcher{StorageConnectionFactory:storageConnectionFactory}	
 	 return dispatcher
 }
