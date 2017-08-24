@@ -101,10 +101,17 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() (*cap.CapPublishedMessage, error) {
 	statement := "SELECT * FROM `cap.published` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
 	conn, err := connection.OpenDbConnection()
-	defer conn.Close()
+	
 	if err != nil {
 		return nil, err
 	}
+
+	if conn == nil {
+		return nil, cap.NewCapError("Database connection is nil.")
+	}
+
+	defer conn.Close()
+
 	rows, err := conn.Query(statement)
 	if err != nil {
 		return nil, err
@@ -113,6 +120,7 @@ func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() 
 	if rows.Next() {
 		rows.Scan(&message)
 	}
+	
 	return message, nil
 }
 
