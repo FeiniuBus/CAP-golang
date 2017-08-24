@@ -8,4 +8,7 @@ type CapPublishedMessage struct{
 	ExpiresAt int
 	Retries int
 	StatusName string
+	LastWarnedTime int
+	MessageId int64
+	TransactionId int64
 }
