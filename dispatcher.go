@@ -28,13 +28,13 @@ func (this Dispatcher) ExecutePublishQueuer(){
 }
 
 func (this Dispatcher) Begin(){
-	tick := time.Tick(60 * time.Second)
+	tick := time.Tick(1 * time.Second)
 	for{
 		select{
 		case <- tick :
-			go this.ExecutePublishQueuer()
+			this.ExecutePublishQueuer()
 		default:
-			time.Sleep(60 * time.Second)
+			time.Sleep(1 * time.Second)
 		}
 	}
 
