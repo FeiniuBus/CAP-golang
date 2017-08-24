@@ -2,13 +2,13 @@ package cap
 
 type Bootstrapper struct {
 	Servers							[]IProcessServer
-	CapOptions						CapOptions
+	CapOptions						*CapOptions
 	Register						*CallbackRegister
 	ConnectionFactory				*StorageConnectionFactory
 }
 
 func NewBootstrapper(
-	capOptions CapOptions, 
+	capOptions *CapOptions, 
 	register *CallbackRegister,
 	connectionFactory *StorageConnectionFactory,
 	) *Bootstrapper {
