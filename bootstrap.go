@@ -5,6 +5,7 @@ type Bootstrapper struct {
 	CapOptions						*CapOptions
 	Register						*CallbackRegister
 	ConnectionFactory				*StorageConnectionFactory
+	QueueExecutorFactory			IQueueExecutorFactory
 }
 
 func NewBootstrapper(
@@ -26,7 +27,9 @@ func NewBootstrapper(
 }
 
 func initBootstrapper(bootstrapper *Bootstrapper) {
+	bootstrapper.QueueExecutorFactory = &QueueExecutorFactory {
 
+	}
 }
 
 func (this *Bootstrapper) Bootstrap() {

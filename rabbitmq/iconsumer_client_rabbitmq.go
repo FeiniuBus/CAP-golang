@@ -2,8 +2,6 @@ package rabbitmq
 
 import (
 	"log"
-	"bytes"
-	"fmt"
 	"github.com/streadway/amqp"
 	"github.com/FeiniuBus/capgo"	
 )
@@ -38,25 +36,6 @@ func NewClient(queueName string , options *RabbitMQOptions) *RabbitMQConsumerCli
 	rtv.InitClient()
 
 	return rtv
-}
-
-func ConnectString(options *RabbitMQOptions) string {
-	var buffer bytes.Buffer
-	var err error
-
-	_, err = buffer.WriteString("amqp://")
-	_, err = buffer.WriteString(options.UserName)
-	_, err = buffer.WriteString(":")
-	_, err = buffer.WriteString(options.Password)
-	_, err = buffer.WriteString("@")
-	_, err = buffer.WriteString(options.HostName)
-	_, err = buffer.WriteString(":")
-	_, err = buffer.WriteString(fmt.Sprint(options.Port))
-	_, err = buffer.WriteString("/")
-
-	failOnError(err, "Write connect string fail")
-
-	return buffer.String()
 }
 
 func (this *RabbitMQConsumerClient) InitClient() {

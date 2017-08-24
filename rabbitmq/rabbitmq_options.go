@@ -1,5 +1,10 @@
 package rabbitmq
 
+import (
+	"bytes"
+	"fmt"
+)
+
 type RabbitMQOptions struct {
 	ConnectionTimeoutSecs				int32
 	Password							string
@@ -41,6 +46,42 @@ func defaultRabbitMQConfig() *RabbitMQOptions {
 		ExchangeType: "topic",
 	}
 }
+
+func ConnectString(options *RabbitMQOptions) string {
+	var buffer bytes.Buffer
+	var err error
+
+	_, err = buffer.WriteString("amqp://")
+	failOnError(err, "Write connect string fail")
+	
+	_, err = buffer.WriteString(options.UserName)
+	failOnError(err, "Write connect string fail")
+	
+	_, err = buffer.WriteString(":")
+	failOnError(err, "Write connect string fail")
+	
+	_, err = buffer.WriteString(options.Password)
+	failOnError(err, "Write connect string fail")
+	
+	_, err = buffer.WriteString("@")
+	failOnError(err, "Write connect string fail")
+	
+	_, err = buffer.WriteString(options.HostName)
+	failOnError(err, "Write connect string fail")
+	
+	_, err = buffer.WriteString(":")
+	failOnError(err, "Write connect string fail")
+	
+	_, err = buffer.WriteString(fmt.Sprint(options.Port))
+	failOnError(err, "Write connect string fail")
+	
+	_, err = buffer.WriteString("/")
+	failOnError(err, "Write connect string fail")
+	
+
+	return buffer.String()
+}
+
 
 func (this *RabbitMQOptions) SetConnectionTimeout(timeoutSecs int32) {
 	this.ConnectionTimeoutSecs = timeoutSecs
