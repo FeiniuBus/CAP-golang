@@ -98,7 +98,7 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 	return returnValue, nil
 }
 
-func  (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*CapReceivedMessage,error){
+func  (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.CapReceivedMessage,error){
 	statement := "SELECT `Id`, `Added`, `Content`, `ExpiresAt`, `Group`, `LastWarnedTime`, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Failed';"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
