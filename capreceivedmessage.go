@@ -13,6 +13,9 @@ type CapReceivedMessage struct{
 	ExpiresAt int
 	Retries int
 	StatusName string
+	LastWarnedTime int
+	MessageId int64
+	TransactionId int64
 }
 
 func NewCapReceivedMessage(context MessageContext) *CapReceivedMessage {
