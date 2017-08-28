@@ -17,7 +17,12 @@ func (this *QueueExecutorPublishBase) Execute(connection IStorageConnection, fec
 		return err
 	}
 
-	err = this.StateChanger.ChangePublishedMessage(message, NewProcessingState(), connection)
+	transaction, err := connection.CreateTransaction()
+	if err != nil {
+		return err
+	}
+
+	err = this.StateChanger.ChangePublishedMessage(message, NewProcessingState(), transaction)
 	if err != nil {
 		return err
 	}
@@ -40,7 +45,7 @@ func (this *QueueExecutorPublishBase) Execute(connection IStorageConnection, fec
 		newState = NewSucceededState()
 	}
 
-	err = this.StateChanger.ChangePublishedMessage(message, newState, connection)
+	err = this.StateChanger.ChangePublishedMessage(message, newState, transaction)
 	if err != nil {
 		return err
 	}

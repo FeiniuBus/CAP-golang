@@ -22,4 +22,5 @@ func (this *Looper) While(predicate func()bool,body func()error)error{
 			}
 		}
 	}
+	return nil
 }
