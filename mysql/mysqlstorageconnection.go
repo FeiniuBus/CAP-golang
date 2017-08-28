@@ -72,7 +72,7 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 }
 
 func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.CapPublishedMessage, error) {
-	statement := "SELECT `Id`, `Added`, `Content`, `ExpiresAt`, `LastWarnedTime`, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `StatusName` = 'Failed';"
+	statement := "SELECT `Id`, `Added`, `Content`, UNIX_TIMESTAMP(`ExpiresAt`), UNIX_TIMESTAMP(`LastWarnedTime`), `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `StatusName` = 'Failed';"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
@@ -99,7 +99,7 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 }
 
 func  (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.CapReceivedMessage,error){
-	statement := "SELECT `Id`, `Added`, `Content`, `ExpiresAt`, `Group`, `LastWarnedTime`, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Failed';"
+	statement := "SELECT `Id`, `Added`, `Content`, UNIX_TIMESTAMP(`ExpiresAt`), `Group`, UNIX_TIMESTAMP(`LastWarnedTime`), `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Failed';"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
@@ -116,7 +116,7 @@ func  (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.C
 
 	for rows.Next() {
 		item := &cap.CapReceivedMessage{}
-		err = rows.Scan(&item.Id,&item.Added,&item.Content,&item.ExpiresAt,&item.Group)
+		err = rows.Scan(&item.Id,&item.Added,&item.Content,&item.ExpiresAt,&item.Group,&item.LastWarnedTime, &item.MessageId, &item.Name, &item.Retries, &item.StatusName, &item.TransactionId)
 		if err != nil {
 			return nil, err
 		}
@@ -212,7 +212,7 @@ func (connection *MySqlStorageConnection) GetReceivedMessage(id int) (*cap.CapRe
 }
 
 func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapReceivedMessage) error {
-	statement := "INSERT INTO `{_prefix}.received`(`Name`,`Group`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`,`MessageId`,`TransactionId`)"
+	statement := "INSERT INTO `cap.received`(`Name`,`Group`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`,`MessageId`,`TransactionId`)"
 	statement += " VALUES(?,?,?,?,?,?,?,?,?);"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
