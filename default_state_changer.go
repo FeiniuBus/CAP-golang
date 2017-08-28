@@ -8,11 +8,6 @@ type StateChanger struct {
 	IStateChanger
 }
 
-func NewStateChanger() IStateChanger {
-	return &StateChanger{
-
-	}
-}
 
 func (this *StateChanger) ChangeReceivedMessageState(message *CapReceivedMessage, state IState, connection IStorageConnection) error {
 	if state.GetExpiresAfter() != 0 {
