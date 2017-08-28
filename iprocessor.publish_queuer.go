@@ -34,6 +34,7 @@ func (this *PublishQueuer) Process(context *ProcessingContext) error{
 		if err != nil {
 			return err
 		}
+		return nil
 	})
 	if err != nil {
 		return err
