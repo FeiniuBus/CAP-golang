@@ -27,7 +27,7 @@ func (this Dispatcher) ExecutePublishQueuer(){
 	}
 }
 
-func (this Dispatcher) Begin(){
+func (this Dispatcher) Process(){
 	tick := time.Tick(1 * time.Second)
 	for{
 		select{

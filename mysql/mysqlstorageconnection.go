@@ -72,7 +72,7 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 }
 
 func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.CapPublishedMessage, error) {
-	statement := "SELECT * FROM `cap.published` WHERE `StatusName` = 'Failed';"
+	statement := "SELECT `Id`, `Added`, `Content`, `ExpiresAt`, `LastWarnedTime`, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `StatusName` = 'Failed';"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
@@ -89,7 +89,34 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 
 	for rows.Next() {
 		item := &cap.CapPublishedMessage{}
-		err = rows.Scan(&item)
+		err = rows.Scan(&item.Id,&item.Added,&item.Content,&item.ExpiresAt,&item.LastWarnedTime,&item.MessageId,&item.Name,&item.Retries,&item.StatusName,&item.TransactionId)
+		if err != nil {
+			return nil, err
+		}
+		returnValue = append(returnValue, item)
+	}
+	return returnValue, nil
+}
+
+func  (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*CapReceivedMessage,error){
+	statement := "SELECT `Id`, `Added`, `Content`, `ExpiresAt`, `Group`, `LastWarnedTime`, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Failed';"
+	conn, err := connection.OpenDbConnection()
+	defer conn.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	returnValue := make([]*cap.CapReceivedMessage, 0)
+
+	rows, err := conn.Query(statement)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		item := &cap.CapReceivedMessage{}
+		err = rows.Scan(&item.Id,&item.Added,&item.Content,&item.ExpiresAt,&item.Group)
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +136,7 @@ func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() 
 	if conn == nil {
 		return nil, cap.NewCapError("Database connection is nil.")
 	}
-
+                                                                                               
 	defer conn.Close()
 
 	rows, err := conn.Query(statement)

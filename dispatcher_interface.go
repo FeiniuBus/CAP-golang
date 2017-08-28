@@ -1,7 +1,7 @@
 package cap
 
-type DispatcherInterface interface{
-	ProcessorInterface
+type IDispatcher interface{
+	IProcessor
 
 	GetWaiting() bool;
 }

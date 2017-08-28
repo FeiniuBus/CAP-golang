@@ -8,6 +8,8 @@ type IStorageConnection interface{
 
 	GetFailedPublishedMessages() ([]*CapPublishedMessage,error);
 
+	GetFailedReceivedMessages() ([]*CapReceivedMessage,error);
+
 	GetNextPublishedMessageToBeEnqueued() (*CapPublishedMessage,error);
 
 	GetNextReceviedMessageToBeEnqueued() (*CapReceivedMessage,error);

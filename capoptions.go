@@ -1,54 +1,20 @@
 package cap
 
-type CapOptions struct{
-	options []*capOption
-}
+import (
+	"time"
+)
 
-type capOption struct{
-	Name string
-	Value interface{}
+type CapOptions struct{
+	ConnectionString string
+	PoolingDelay time.Duration
+	LogFunction func(message string,level ILogLevel)
 }
 
 func NewCapOptions() *CapOptions{
 	options := &CapOptions{}
-	options.options = make([]*capOption,0)
 	return options
 }
 
-func (capOptions *CapOptions) Add(name string, value interface{}){
-	option := &capOption{}
-	option.Name = name
-	option.Value = value
-	capOptions.options = append(capOptions.options, option)
-}
-
-func (capOptions *CapOptions) Get(name string)(interface{},error){
-	var value interface{}
-	for i := 0; i < len(capOptions.options); i++ {
-		_option := capOptions.options[i]
-		if(_option.Name == name){
-			value = _option.Value
-			break
-		}else{
-			continue
-		}
-	}
-	if value != nil{
-		return value, nil
-	}else{
-		return nil, NewCapError("Could not find key [" + name + "] in configured options.");
-	}
-}
-
-func (capOptions *CapOptions) UseMySql(connectionString string){
-	capOptions.Add("CONNECTION_STRING", connectionString)
-}
-
 func (capOptions *CapOptions) GetConnectionString() (string, error){
-	value, err := capOptions.Get("CONNECTION_STRING")
-	if err != nil{
-		return "", err
-	}else{
-		return value.(string), nil
-	}
+	return capOptions.ConnectionString,nil	
 }
