@@ -122,10 +122,8 @@ func (transaction *MySqlStorageTransaction) UpdateReceivedMessage(message *cap.C
 func (transaction *MySqlStorageTransaction) Commit() error {
 	err := transaction.DbTransaction.Commit()
 	if err != nil {
-		return err
-	}
-	err = transaction.DbConnection.Close()
-	if err != nil {
+		_ = transaction.DbTransaction.Rollback()
+		_ = transaction.DbConnection.Close()
 		return err
 	}
 	return nil
