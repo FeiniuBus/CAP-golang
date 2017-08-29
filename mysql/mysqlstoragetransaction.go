@@ -36,11 +36,7 @@ func NewStorageTransaction(options *cap.CapOptions) (cap.IStorageTransaction, er
 // EnqueuePublishedMessage ...
 func (transaction *MySqlStorageTransaction) EnqueuePublishedMessage(message *cap.CapPublishedMessage) error {
 	statement := "INSERT INTO `cap.queue` VALUES (?,?)"
-	stmt, err := transaction.DbTransaction.Prepare(statement)
-	if err != nil {
-		return err
-	}
-	result, err := stmt.Exec(message.Id, 0)
+	result, err := transaction.DbTransaction.Exec(statement)
 	if err != nil {
 		return err
 	}
