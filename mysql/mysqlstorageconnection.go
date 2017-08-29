@@ -81,7 +81,7 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 
 // GetFailedPublishedMessages ...
 func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.CapPublishedMessage, error) {
-	statement := "SELECT `Id`, UNIX_TIMESTAMP(`Added`) AS Added, `Content`, UNIX_TIMESTAMP(`ExpiresAt`) AS ExpiresAt, UNIX_TIMESTAMP(`LastWarnedTime`) AS LastWarnedTime,  `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `StatusName` = 'Failed';"
+	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime,  `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `StatusName` = 'Failed';"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
@@ -109,7 +109,7 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 
 // GetFailedReceivedMessages ...
 func (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.CapReceivedMessage, error) {
-	statement := "SELECT `Id`, UNIX_TIMESTAMP(`Added`) AS Added, `Content`, UNIX_TIMESTAMP(`ExpiresAt`) AS ExpiresAt, `Group`, UNIX_TIMESTAMP(`LastWarnedTime`) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Failed';"
+	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, `Group`, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Failed';"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
@@ -164,7 +164,7 @@ func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() 
 
 // GetNextReceviedMessageToBeEnqueued ..
 func (connection *MySqlStorageConnection) GetNextReceviedMessageToBeEnqueued() (*cap.CapReceivedMessage, error) {
-	statement := "SELECT `Id`, UNIX_TIMESTAMP(`Added`) AS Added, `Content`, UNIX_TIMESTAMP(`ExpiresAt`) AS ExpiresAt, `Group`, UNIX_TIMESTAMP(`LastWarnedTime`) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
+	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, `Group`, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
@@ -185,7 +185,7 @@ func (connection *MySqlStorageConnection) GetNextReceviedMessageToBeEnqueued() (
 
 // GetPublishedMessage ...
 func (connection *MySqlStorageConnection) GetPublishedMessage(id int) (*cap.CapPublishedMessage, error) {
-	statement := "SELECT `Id`, UNIX_TIMESTAMP(`Added`) AS Added, `Content`, UNIX_TIMESTAMP(`ExpiresAt`) AS ExpiresAt, UNIX_TIMESTAMP(`LastWarnedTime`) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `Id`=?;"
+	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `Id`=?;"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
@@ -206,7 +206,7 @@ func (connection *MySqlStorageConnection) GetPublishedMessage(id int) (*cap.CapP
 
 // GetReceivedMessage ...
 func (connection *MySqlStorageConnection) GetReceivedMessage(id int) (*cap.CapReceivedMessage, error) {
-	statement := "SELECT `Id`, UNIX_TIMESTAMP(`Added`) AS Added, `Content`, UNIX_TIMESTAMP(`ExpiresAt`) AS ExpiresAt, `Group`, UNIX_TIMESTAMP(`LastWarnedTime`) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `Id`=?;"
+	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, `Group`, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `Id`=?;"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
