@@ -219,7 +219,7 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 	if err != nil {
 		return err
 	}
-	result, err := conn.Exec(statement, message.Name, message.Group, message.Content, message.Retries, message.Added, message.ExpiresAt, message.StatusName, cap.NewId(), cap.NewID())
+	result, err := conn.Exec(statement, message.Name, message.Group, message.Content, message.Retries, message.Added, message.ExpiresAt, message.StatusName, cap.NewID(), cap.NewID())
 	if err != nil {
 		return err
 	}
