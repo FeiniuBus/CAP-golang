@@ -35,8 +35,8 @@ func NewStorageTransaction(options *cap.CapOptions) (cap.IStorageTransaction, er
 
 // EnqueuePublishedMessage ...
 func (transaction *MySqlStorageTransaction) EnqueuePublishedMessage(message *cap.CapPublishedMessage) error {
-	statement := "INSERT INTO `cap.queue` VALUES (?,?)"
-	result, err := transaction.DbTransaction.Exec(statement)
+	statement := "INSERT INTO `cap.queue` (`MessageId`, `MessageType`) VALUES (?,?);"
+	result, err := transaction.DbTransaction.Exec(statement, message.Id, 0)
 	if err != nil {
 		return err
 	}
@@ -52,12 +52,8 @@ func (transaction *MySqlStorageTransaction) EnqueuePublishedMessage(message *cap
 
 // EnqueueReceivedMessage ...
 func (transaction *MySqlStorageTransaction) EnqueueReceivedMessage(message *cap.CapReceivedMessage) error {
-	statement := "INSERT INTO `cap.queue` VALUES (?,?)"
-	stmt, err := transaction.DbTransaction.Prepare(statement)
-	if err != nil {
-		return err
-	}
-	result, err := stmt.Exec(message.Id, 1)
+	statement := "INSERT INTO `cap.queue` VALUES (?,?);"
+	result, err := transaction.DbTransaction.Exec(statement, message.Id, 1)
 	if err != nil {
 		return err
 	}
@@ -76,11 +72,8 @@ func (transaction *MySqlStorageTransaction) UpdatePublishedMessage(message *cap.
 	statement := "UPDATE `cap.published` "
 	statement += " SET `Retries` = ?,`ExpiresAt` = FROM_UNIXTIME(?),`StatusName`= ?"
 	statement += " WHERE `Id` = ?"
-	stmt, err := transaction.DbTransaction.Prepare(statement)
-	if err != nil {
-		return err
-	}
-	result, err := stmt.Exec(message.Retries, message.ExpiresAt, message.StatusName, message.Id)
+	result, err := transaction.DbTransaction.Exec(statement, message.Retries, message.ExpiresAt, message.StatusName, message.Id)
+
 	if err != nil {
 		return err
 	}
@@ -99,11 +92,7 @@ func (transaction *MySqlStorageTransaction) UpdateReceivedMessage(message *cap.C
 	statement := "UPDATE `cap.received`"
 	statement += " SET `Retries` = ?,`ExpiresAt` = FROM_UNIXTIME(?),`StatusName`= ?"
 	statement += " WHERE `Id` = ?"
-	stmt, err := transaction.DbTransaction.Prepare(statement)
-	if err != nil {
-		return err
-	}
-	result, err := stmt.Exec(message.Retries, message.ExpiresAt, message.StatusName, message.Id)
+	result, err := transaction.DbTransaction.Exec(statement, message.Retries, message.ExpiresAt, message.StatusName, message.Id)
 	if err != nil {
 		return err
 	}
