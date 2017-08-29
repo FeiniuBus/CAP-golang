@@ -12,16 +12,20 @@ type PublishQueueExecutor struct {
 
 func NewPublishQueueExecutor(stateChanger cap.IStateChanger, rabbitOptions *RabbitMQOptions) *PublishQueueExecutor {
 	rtv := &PublishQueueExecutor{
-		RabbitOptions: rabbitOptions ,
+		RabbitOptions: rabbitOptions,
 	}
 	rtv.StateChanger = stateChanger
 
 	return rtv
 }
 
+func (this *PublishQueueExecutor) Execute(connection cap.IStorageConnection, feched cap.IFetchedMessage) error {
+	return this.QueueExecutorPublishBase.Execute(connection, feched)
+}
+
 func (this *PublishQueueExecutor) Publish(keyName, content string) error {
 	connectString := ConnectString(this.RabbitOptions)
-	
+
 	conn, err := amqp.Dial(connectString)
 	if err != nil {
 		return err
@@ -54,7 +58,7 @@ func (this *PublishQueueExecutor) Publish(keyName, content string) error {
 		false,
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body:  []byte(content),
+			Body:        []byte(content),
 		},
 	)
 	if err != nil {
