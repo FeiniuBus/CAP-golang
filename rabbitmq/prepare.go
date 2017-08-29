@@ -13,6 +13,6 @@ func Prepare(bootstrapper *cap.Bootstrapper, rabbitMQOptions RabbitMQOptions) {
 	)
 	bootstrapper.Servers = append(bootstrapper.Servers, consumerHandler)
 	bootstrapper.QueueExecutorFactory.SetPublishQueueExecutorCreateDelegate(func() cap.IQueueExecutor {
-		return NewQueueExecutorPublish(cap.NewStateChanger(), NewPublishQueueExecutor(cap.NewStateChanger(), &rabbitMQOptions))
+		return cap.NewQueueExecutorPublish(cap.NewStateChanger(), NewPublishQueueExecutor(cap.NewStateChanger(), &rabbitMQOptions))
 	})
 }
