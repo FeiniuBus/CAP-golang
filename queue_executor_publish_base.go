@@ -28,7 +28,7 @@ func (this *QueueExecutorPublishBase) Execute(connection IStorageConnection, fec
 	}
 
 	err = this.Publish(message.Name, message.Content)
-	
+
 	var newState IState = nil
 	if err != nil {
 		shouldRetry, err := this.UpdateMessageForRetry(message, connection)
@@ -84,4 +84,8 @@ func (this *QueueExecutorPublishBase) UpdateMessageForRetry(message *CapPublishe
 	}
 
 	return true, nil
+}
+
+func (this *QueueExecutorPublishBase) Publish(keyName, content string) error {
+	panic("must impl this function in child class")
 }
