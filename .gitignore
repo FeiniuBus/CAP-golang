@@ -15,3 +15,4 @@ npm-debug.log
 .glide/
 *.a
 .vscode/
+captesting/debug
