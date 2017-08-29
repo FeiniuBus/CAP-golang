@@ -42,12 +42,12 @@ func (dispatcher *DefaultDispatcher) step(context *ProcessingContext) (bool, err
 
 	conn, err := dispatcher.StorageConnectionFactory.CreateStorageConnection(dispatcher.CapOptions)
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	fetched, err := conn.FetchNextMessage()
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	var messageType string
