@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/FeiniuBus/capgo"
 	cmysql "github.com/FeiniuBus/capgo/mysql"
@@ -33,14 +34,14 @@ func init() {
 	CapOptions = cap.NewCapOptions()
 	ConnectionString = "root:kge2001@tcp(192.168.206.129:3306)/FeiniuCAP?charset=utf8"
 	CapOptions.ConnectionString = ConnectionString
-
+	CapOptions.PoolingDelay = 10 * time.Second
 	StorageConnectionFactory = cap.NewStorageConnectionFactory(CreateStorageConnection)
 
 	ProcessorServer = cap.NewProcessorServer().(*cap.ProcessorServer)
-	//ProcessorServer.Container.Register(cap.NewFailedJobProcessor(CapOptions, StorageConnectionFactory))
+	ProcessorServer.Container.Register(cap.NewFailedJobProcessor(CapOptions, StorageConnectionFactory))
 	ProcessorServer.Container.Register(cap.NewPublishQueuer(CapOptions, StorageConnectionFactory))
-	//ProcessorServer.Container.Register(cap.NewSubscribeQueuer(CapOptions, StorageConnectionFactory))
-	//ProcessorServer.Container.Register(cap.NewDefaultDispatcher(CapOptions, StorageConnectionFactory))
+	ProcessorServer.Container.Register(cap.NewSubscribeQueuer(CapOptions, StorageConnectionFactory))
+	ProcessorServer.Container.Register(cap.NewDefaultDispatcher(CapOptions, StorageConnectionFactory))
 
 	Bootstrapper = cap.NewBootstrapper(CapOptions, StorageConnectionFactory)
 	Bootstrapper.Servers = append(Bootstrapper.Servers, ProcessorServer)

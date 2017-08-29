@@ -58,14 +58,7 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 
 	statement := "SELECT `MessageId`,`MessageType` FROM `cap.queue` LIMIT 1 FOR UPDATE;"
 
-	stmt, err := transaction.Prepare(statement)
-
-	if err != nil {
-		conn.Close()
-		return nil, err
-	}
-
-	row, err := stmt.Query()
+	row, err := transaction.Query(statement)
 	if err != nil {
 		conn.Close()
 		return nil, err
@@ -80,21 +73,10 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 		conn.Close()
 		return nil, nil
 	}
-	err = stmt.Close()
-
-	if err != nil {
-		conn.Close()
-		return nil, err
-	}
 
 	deleteStatement := "DELETE FROM `cap.queue` LIMIT 1;"
-	deleteStmt, err := transaction.Prepare(deleteStatement)
-	if err != nil {
-		conn.Close()
-		return nil, err
-	}
 
-	result, err := deleteStmt.Exec()
+	result, err := transaction.Exec(deleteStatement)
 	if err != nil {
 		_ = transaction.Rollback()
 		conn.Close()
