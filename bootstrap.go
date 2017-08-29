@@ -1,5 +1,14 @@
 package cap
 
+import (
+	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+)
+
 // Bootstrapper provide CAP booting functions.
 type Bootstrapper struct {
 	Servers              []IProcessServer
@@ -7,6 +16,7 @@ type Bootstrapper struct {
 	Register             *CallbackRegister
 	ConnectionFactory    *StorageConnectionFactory
 	QueueExecutorFactory IQueueExecutorFactory
+	WaitGroup            *sync.WaitGroup
 }
 
 // NewBootstrapper implements to instantiate an instance of Bootstrapper.
@@ -43,7 +53,25 @@ func (bootstrapper *Bootstrapper) Bootstrap() {
 // Close all started servers.
 func (bootstrapper *Bootstrapper) Close() {
 	for _, server := range bootstrapper.Servers {
-		server.WaitForClose()
+		bootstrapper.WaitGroup.Add(1)
+		go server.WaitForClose(bootstrapper.WaitGroup)
+	}
+	bootstrapper.WaitGroup.Wait()
+}
+
+// WaitForTerminalSignal ...
+func (bootstrapper *Bootstrapper) WaitForTerminalSignal() {
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGTERM)
+	for {
+		select {
+		case s := <-c:
+			fmt.Println("get signal:", s)
+			bootstrapper.Close()
+			break
+		default:
+			time.Sleep(10 * time.Second)
+		}
 	}
 }
 

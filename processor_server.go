@@ -1,10 +1,7 @@
 package cap
 
 import (
-	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
+	"sync"
 	"time"
 )
 
@@ -41,28 +38,19 @@ func (server *ProcessorServer) StopTheWorld() chan bool {
 	return result
 }
 
-// Close bla.
-func (server *ProcessorServer) WaitForClose() {
+// WaitForClose bla.
+func (server *ProcessorServer) WaitForClose(wg *sync.WaitGroup) {
 	server.Context.Stop()
-	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGTERM)
-
-	go func() {
-		for {
-			select {
-			case <-server.StopTheWorld():
-				signal.Stop(c)
-				//TODO : Kill process
-				break
-
-			default:
-				time.Sleep(5 * time.Second)
-			}
-		}
-	}()
 
 	for {
-		s := <-c
-		fmt.Println("Got signal:", s)
+		select {
+		case <-server.StopTheWorld():
+			wg.Done()
+			//TODO : Kill process
+			break
+
+		default:
+			time.Sleep(5 * time.Second)
+		}
 	}
 }
