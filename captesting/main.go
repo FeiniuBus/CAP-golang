@@ -32,25 +32,24 @@ func CreateStorageConnection(options *cap.CapOptions) (cap.IStorageConnection, e
 func init() {
 
 	CapOptions = cap.NewCapOptions()
-	ConnectionString = "root:kge2001@tcp(192.168.206.129:3306)/FeiniuCAP?charset=utf8&multiStatements=true"
+	ConnectionString = "root:123456@tcp(localhost:3306)/CAP_Feiniubus?charset=utf8&multiStatements=true"
 	CapOptions.ConnectionString = ConnectionString
 	CapOptions.PoolingDelay = 10 * time.Second
 	StorageConnectionFactory = cap.NewStorageConnectionFactory(CreateStorageConnection)
+
+	RabbitMQOptions = crabbitmq.RabbitMQConfig
+	RabbitMQOptions.SetHostName("localhost")
+
+	Bootstrapper = cap.NewBootstrapper(CapOptions, StorageConnectionFactory)
+	crabbitmq.Prepare(Bootstrapper, *RabbitMQOptions)
 
 	ProcessorServer = cap.NewProcessorServer().(*cap.ProcessorServer)
 	ProcessorServer.Container.Register(cap.NewFailedJobProcessor(CapOptions, StorageConnectionFactory))
 	ProcessorServer.Container.Register(cap.NewPublishQueuer(CapOptions, StorageConnectionFactory))
 	ProcessorServer.Container.Register(cap.NewSubscribeQueuer(CapOptions, StorageConnectionFactory))
-	ProcessorServer.Container.Register(cap.NewDefaultDispatcher(CapOptions, StorageConnectionFactory))
+	ProcessorServer.Container.Register(cap.NewDefaultDispatcher(CapOptions, StorageConnectionFactory, Bootstrapper.QueueExecutorFactory))
 
-	Bootstrapper = cap.NewBootstrapper(CapOptions, StorageConnectionFactory)
 	Bootstrapper.Servers = append(Bootstrapper.Servers, ProcessorServer)
-
-	RabbitMQOptions = crabbitmq.RabbitMQConfig
-	RabbitMQOptions.SetHostName("192.168.206.128")
-	RabbitMQOptions.SetUserName("andrew")
-	RabbitMQOptions.SetPassword("kge2001")
-	crabbitmq.Prepare(Bootstrapper, *RabbitMQOptions)
 
 	PublisherFactory = cap.NewPublisherFactory(CreatePublisher)
 
