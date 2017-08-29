@@ -1,5 +1,9 @@
 package cap
 
+import (
+	"fmt"
+)
+
 // InfiniteRetryProcessor bla.
 type InfiniteRetryProcessor struct {
 	InnerProcessor IProcessor
@@ -18,7 +22,10 @@ func (processor InfiniteRetryProcessor) Process(context *ProcessingContext) {
 		if context.IsStopping == false {
 			processor.Status = "Processing"
 			result, err := processor.InnerProcessor.Process(context)
-			if err != nil && err.Error() == "OperationCanceled" {
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			if err != nil && err.Error() != "OperationCanceled" {
 				return
 			}
 			if result != nil {
