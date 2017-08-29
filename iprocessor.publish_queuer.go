@@ -42,6 +42,11 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		return nil, err
 	}
 
+	err = transaction.EnqueuePublishedMessage(message)
+	if err != nil {
+		return nil, err
+	}
+
 	err = processor.StateChanger.ChangePublishedMessage(message, state, transaction)
 	if err != nil {
 		return nil, err
@@ -52,10 +57,6 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		return nil, err
 	}
 
-	err = context.ThrowIfStopping()
-	if err != nil {
-		return nil, err
-	}
 	err = context.ThrowIfStopping()
 	if err != nil {
 		return nil, err
