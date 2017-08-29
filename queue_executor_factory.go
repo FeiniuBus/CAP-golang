@@ -6,6 +6,12 @@ type QueueExecutorFactory struct {
 	Register                           *CallbackRegister
 }
 
+func NewQueueExecutorFactory(register *CallbackRegister) *QueueExecutorFactory {
+	return &QueueExecutorFactory{
+		Register: register,
+	}
+}
+
 func (this *QueueExecutorFactory) SetPublishQueueExecutorCreateDelegate(delegate PublishQueueExecutorCreateDelegate) {
 	this.PublishQueueExecutorCreateDelegate = delegate
 }
