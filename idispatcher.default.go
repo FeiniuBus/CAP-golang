@@ -52,6 +52,10 @@ func (dispatcher *DefaultDispatcher) step(context *ProcessingContext) (bool, err
 		return false, err
 	}
 
+	if fetched == nil {
+		return true, nil
+	}
+
 	var messageType string
 	if fetched.GetMessageType() == 0 {
 		messageType = PUBLISH
