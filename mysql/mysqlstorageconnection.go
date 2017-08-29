@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -50,7 +51,10 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 		return nil, err
 	}
 
-	transaction, err := conn.Begin()
+	options := &sql.TxOptions{}
+	options.Isolation = sql.LevelReadCommitted
+
+	transaction, err := conn.BeginTx(context.Background(), options)
 	if err != nil {
 		conn.Close()
 		return nil, err
