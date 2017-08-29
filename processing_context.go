@@ -4,30 +4,36 @@ import (
 	"time"
 )
 
-type ProcessingContext struct{
+// ProcessingContext bla.
+type ProcessingContext struct {
 	IsStopping bool
 }
 
-func NewProcessingContext() *ProcessingContext{
-	context := &ProcessingContext{ IsStopping:false}
+// NewProcessingContext bla.
+func NewProcessingContext() *ProcessingContext {
+	context := &ProcessingContext{IsStopping: false}
 	return context
 }
 
-func (this *ProcessingContext) WaitAsync(timeout time.Duration){
-	time.Sleep(timeout)
-}
-
-func (this *ProcessingContext) ThrowIfStopping() error {
-	if this.IsStopping {
+// ThrowIfStopping bla.
+func (context *ProcessingContext) ThrowIfStopping() error {
+	if context.IsStopping {
 		return NewCapError("OperationCanceled")
 	}
 	return nil
 }
 
-func (this *ProcessingContext) Stop(){
-	this.IsStopping = true
+// Stop bla.
+func (context *ProcessingContext) Stop() {
+	context.IsStopping = true
 }
 
-func (this *ProcessingContext) Start(){
-	this.IsStopping = false
+// Start bla.
+func (context *ProcessingContext) Start() {
+	context.IsStopping = false
+}
+
+// Wait bla.
+func (context *ProcessingContext) Wait(d time.Duration) {
+	time.Sleep(d)
 }

@@ -21,6 +21,7 @@ func (this *StateChanger) ChangeReceivedMessageState(message *CapReceivedMessage
 	}
 	return nil
 }
+
 func (this *StateChanger) ChangePublishedMessage(message *CapPublishedMessage, state IState, transaction IStorageTransaction) error{
 	message.StatusName = state.GetName()
 	err := state.ApplyPublishedMessage(message, transaction)

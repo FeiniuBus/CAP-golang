@@ -1,34 +1,55 @@
 package cap
 
 import (
-	"sync"
+	"time"
 )
 
-type ProcessorServer struct{
-	Container *ProcessorContainer
-	Context *ProcessingContext
+// ProcessorServer bla.
+type ProcessorServer struct {
+	Container  *ProcessorContainer
+	Context    *ProcessingContext
+	Processors []*InfiniteRetryProcessor
 }
 
-func NewProcessorServer() *ProcessorServer{
-	server := &ProcessorServer{Container:NewProcessorContainer(), Context:NewProcessingContext()}
+// NewProcessorServer bla.
+func NewProcessorServer() *ProcessorServer {
+	server := &ProcessorServer{Container: NewProcessorContainer(), Context: NewProcessingContext(), Processors: make([]*InfiniteRetryProcessor, 0)}
 	return server
 }
 
-func (this *ProcessorServer) Start(){
-	var wg sync.WaitGroup
-	for i:=0;i>len(this.Container.Processors);i++ {
-		wg.Add(1)
-		go func(innerProcessor IProcessor){
-			defer wg.Done()
-			processor := NewInfiniteRetryProcessor(innerProcessor)
-			processor.Process(this.Context)
-		}(this.Container.Processors[i])
-		
+// Start bla.
+func (server *ProcessorServer) Start() {
+	server.Processors = server.Container.GetProcessors()
+	for _, val := range server.Processors {
+		go val.Process(server.Context)
 	}
-	wg.Wait()
 }
 
-func (this *ProcessorServer) Close(){
-	this.Context.Stop()
+func (server *ProcessorServer) StopTheWorld() chan bool {
+	var result chan bool
+	result = make(chan bool, 1)
+	for _, val := range server.Processors {
+		if val.Status == "Processing" {
+			result = make(chan bool, 0)
+		}
+	}
+	return result
 }
 
+// Close bla.
+func (server *ProcessorServer) Close() {
+	server.Context.Stop()
+
+	go func() {
+		for {
+			select {
+			case <-server.StopTheWorld():
+				//TODO : Kill process
+				break
+
+			default:
+				time.Sleep(5 * time.Second)
+			}
+		}
+	}()
+}

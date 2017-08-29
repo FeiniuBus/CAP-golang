@@ -1,36 +1,39 @@
 package cap
 
-
-type FailedJobProcessor struct{
-	Options *CapOptions
-	StateChanger IStateChanger
+// FailedJobProcessor ...
+type FailedJobProcessor struct {
+	Options                  *CapOptions
+	StateChanger             IStateChanger
 	StorageConnectionFactory *StorageConnectionFactory
 }
 
-func (this *FailedJobProcessor) Process(context *ProcessingContext) error{
-	connection, err := this.StorageConnectionFactory.CreateStorageConnection(this.Options)
-	if err != nil{
-		return err
+// Process ...
+func (processor *FailedJobProcessor) Process(context *ProcessingContext) (*ProcessResult, error) {
+	connection, err := processor.StorageConnectionFactory.CreateStorageConnection(processor.Options)
+	if err != nil {
+		return nil, err
 	}
-	err = this.ProcessPublishedMessage(connection)
-	if err != nil{
-		return err
+	err = processor.ProcessPublishedMessage(connection)
+	if err != nil {
+		return nil, err
 	}
-	err = this.ProcessReceivedMessage(connection)
-	if err != nil{
-		return err
+	err = processor.ProcessReceivedMessage(connection)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+
+	return ProcessSleeping(processor.Options.PoolingDelay), nil
 }
 
-func (this *FailedJobProcessor) ProcessPublishedMessage(connection IStorageConnection) error{
+// ProcessPublishedMessage ...
+func (processor *FailedJobProcessor) ProcessPublishedMessage(connection IStorageConnection) error {
 	hasException := false
 	messages, err := connection.GetFailedPublishedMessages()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	length := len(messages)
-	for i:=0;i<length;i++ {
+	for i := 0; i < length; i++ {
 		message := messages[i]
 		if hasException == false {
 			//TODO: failed callback
@@ -39,7 +42,7 @@ func (this *FailedJobProcessor) ProcessPublishedMessage(connection IStorageConne
 		if err != nil {
 			return err
 		}
-		err = this.StateChanger.ChangePublishedMessage(message,NewEnqueuedState(),transaction)
+		err = processor.StateChanger.ChangePublishedMessage(message, NewEnqueuedState(), transaction)
 		if err != nil {
 			return err
 		}
@@ -51,14 +54,15 @@ func (this *FailedJobProcessor) ProcessPublishedMessage(connection IStorageConne
 	return nil
 }
 
-func (this *FailedJobProcessor) ProcessReceivedMessage(connection IStorageConnection) error{
+// ProcessReceivedMessage ...
+func (processor *FailedJobProcessor) ProcessReceivedMessage(connection IStorageConnection) error {
 	hasException := false
 	messages, err := connection.GetFailedReceivedMessages()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	length := len(messages)
-	for i:=0;i<length;i++ {
+	for i := 0; i < length; i++ {
 		message := messages[i]
 		if hasException == false {
 			//TODO: failed callback
@@ -67,7 +71,7 @@ func (this *FailedJobProcessor) ProcessReceivedMessage(connection IStorageConnec
 		if err != nil {
 			return err
 		}
-		err = this.StateChanger.ChangeReceivedMessageState(message,NewEnqueuedState(),transaction)
+		err = processor.StateChanger.ChangeReceivedMessageState(message, NewEnqueuedState(), transaction)
 		if err != nil {
 			return err
 		}

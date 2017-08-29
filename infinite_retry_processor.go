@@ -1,24 +1,34 @@
 package cap
 
-type InfiniteRetryProcessor struct{
+// InfiniteRetryProcessor bla.
+type InfiniteRetryProcessor struct {
 	InnerProcessor IProcessor
+	Status         string
 }
 
-func NewInfiniteRetryProcessor(innerProcessor IProcessor) *InfiniteRetryProcessor{
-	processor := &InfiniteRetryProcessor{InnerProcessor:innerProcessor}
+// NewInfiniteRetryProcessor bla.
+func NewInfiniteRetryProcessor(innerProcessor IProcessor) *InfiniteRetryProcessor {
+	processor := &InfiniteRetryProcessor{InnerProcessor: innerProcessor, Status: "Stop"}
 	return processor
 }
 
-func (this InfiniteRetryProcessor)Process(context *ProcessingContext){
-	for{
+// Process bla.
+func (processor InfiniteRetryProcessor) Process(context *ProcessingContext) {
+	for {
 		if context.IsStopping == false {
-			err := this.InnerProcessor.Process(context)
-			if err.Error() == "OperationCanceled" {
+			processor.Status = "Processing"
+			result, err := processor.InnerProcessor.Process(context)
+			if err != nil && err.Error() == "OperationCanceled" {
 				return
-			}else{
-				//retry
 			}
-		}else{
+			if result != nil {
+				processor.Status = result.Status
+				if result.Status == "Sleeping" {
+					context.Wait(result.PollingDelay)
+				}
+			}
+		} else {
+			processor.Status = "Stop"
 			break
 		}
 	}

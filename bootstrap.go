@@ -1,23 +1,25 @@
 package cap
 
+// Bootstrapper provide CAP booting functions.
 type Bootstrapper struct {
-	Servers							[]IProcessServer
-	CapOptions						*CapOptions
-	Register						*CallbackRegister
-	ConnectionFactory				*StorageConnectionFactory
-	QueueExecutorFactory			IQueueExecutorFactory
+	Servers              []IProcessServer
+	CapOptions           *CapOptions
+	Register             *CallbackRegister
+	ConnectionFactory    *StorageConnectionFactory
+	QueueExecutorFactory IQueueExecutorFactory
 }
 
+// NewBootstrapper implements to instantiate an instance of Bootstrapper.
 func NewBootstrapper(
-	capOptions *CapOptions, 
+	capOptions *CapOptions,
 	register *CallbackRegister,
 	connectionFactory *StorageConnectionFactory,
-	) *Bootstrapper {
+) *Bootstrapper {
 
 	rtv := &Bootstrapper{
-		Servers: make([]IProcessServer, 0) ,
-		CapOptions: capOptions,
-		Register: register,
+		Servers:           make([]IProcessServer, 0),
+		CapOptions:        capOptions,
+		Register:          register,
 		ConnectionFactory: connectionFactory,
 	}
 
@@ -26,24 +28,26 @@ func NewBootstrapper(
 	return rtv
 }
 
+// initBootstrapper initlize Bootstrapper.
 func initBootstrapper(bootstrapper *Bootstrapper) {
-	bootstrapper.QueueExecutorFactory = &QueueExecutorFactory {
-
-	}
+	bootstrapper.QueueExecutorFactory = &QueueExecutorFactory{}
 }
 
-func (this *Bootstrapper) Bootstrap() {
-	for _, server := range this.Servers {
+// Bootstrap start CAP servers.
+func (bootstrapper *Bootstrapper) Bootstrap() {
+	for _, server := range bootstrapper.Servers {
 		server.Start()
 	}
 }
 
-func (this *Bootstrapper) Close() {
-	for _, server := range this.Servers {
+// Close all started servers.
+func (bootstrapper *Bootstrapper) Close() {
+	for _, server := range bootstrapper.Servers {
 		server.Close()
 	}
 }
 
-func (this *Bootstrapper) Route(group, name string, cb CallbackInterface) {
-	this.Register.Add(group, name, cb)
+// Route listeners.
+func (bootstrapper *Bootstrapper) Route(group, name string, cb CallbackInterface) {
+	bootstrapper.Register.Add(group, name, cb)
 }
