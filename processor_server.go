@@ -13,7 +13,7 @@ type ProcessorServer struct {
 }
 
 // NewProcessorServer bla.
-func NewProcessorServer() *ProcessorServer {
+func NewProcessorServer() IProcessServer {
 	server := &ProcessorServer{Container: NewProcessorContainer(), Context: NewProcessingContext(), Processors: make([]*InfiniteRetryProcessor, 0)}
 	return server
 }
