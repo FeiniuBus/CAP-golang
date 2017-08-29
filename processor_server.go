@@ -42,7 +42,7 @@ func (server *ProcessorServer) StopTheWorld() chan bool {
 }
 
 // Close bla.
-func (server *ProcessorServer) Close() {
+func (server *ProcessorServer) WaitForClose() {
 	server.Context.Stop()
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGTERM)
