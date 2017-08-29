@@ -32,7 +32,7 @@ func CreateStorageConnection(options *cap.CapOptions) (cap.IStorageConnection, e
 func init() {
 
 	CapOptions = cap.NewCapOptions()
-	ConnectionString = "root:kge2001@tcp(192.168.206.129:3306)/FeiniuCAP?charset=utf8[?multiStatements=true]"
+	ConnectionString = "root:kge2001@tcp(192.168.206.129:3306)/FeiniuCAP?charset=utf8&multiStatements=true"
 	CapOptions.ConnectionString = ConnectionString
 	CapOptions.PoolingDelay = 10 * time.Second
 	StorageConnectionFactory = cap.NewStorageConnectionFactory(CreateStorageConnection)
