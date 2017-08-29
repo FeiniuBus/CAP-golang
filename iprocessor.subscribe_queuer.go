@@ -25,7 +25,7 @@ func (processor *SubscribeQueuer) Process(context *ProcessingContext) (*ProcessR
 	if err != nil {
 		return nil, err
 	}
-	if message == nil {
+	if message == nil || message.Id == 0 {
 		return nil, nil
 	}
 
