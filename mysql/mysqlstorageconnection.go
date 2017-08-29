@@ -80,6 +80,12 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 		conn.Close()
 		return nil, nil
 	}
+	err = stmt.Close()
+
+	if err != nil {
+		conn.Close()
+		return nil, err
+	}
 
 	deleteStatement := "DELETE FROM `cap.queue` LIMIT 1;"
 	deleteStmt, err := transaction.Prepare(deleteStatement)
@@ -105,6 +111,12 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 		_ = transaction.Rollback()
 		conn.Close()
 		return nil, cap.NewCapError("FetchNextMessage : Database execution should affect 1 row but affected 0 row actually.")
+	}
+
+	err := deleteStmt.Close()
+	if err != nil {
+		conn.Close()
+		return nil, err
 	}
 
 	fetchedMessage := NewFetchedMessage(messageID, messageType, conn, transaction)
