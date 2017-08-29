@@ -1,23 +1,22 @@
 package cap
 
 type Bootstrapper struct {
-	Servers							[]IProcessServer
-	CapOptions						*CapOptions
-	Register						*CallbackRegister
-	ConnectionFactory				*StorageConnectionFactory
-	QueueExecutorFactory			IQueueExecutorFactory
+	Servers              []IProcessServer
+	CapOptions           *CapOptions
+	Register             *CallbackRegister
+	ConnectionFactory    *StorageConnectionFactory
+	QueueExecutorFactory IQueueExecutorFactory
 }
 
 func NewBootstrapper(
-	capOptions *CapOptions, 
-	register *CallbackRegister,
+	capOptions *CapOptions,
 	connectionFactory *StorageConnectionFactory,
-	) *Bootstrapper {
+) *Bootstrapper {
 
 	rtv := &Bootstrapper{
-		Servers: make([]IProcessServer, 0) ,
-		CapOptions: capOptions,
-		Register: register,
+		Servers:           make([]IProcessServer, 0),
+		CapOptions:        capOptions,
+		Register:          NewCallbackRegister(),
 		ConnectionFactory: connectionFactory,
 	}
 
@@ -27,9 +26,7 @@ func NewBootstrapper(
 }
 
 func initBootstrapper(bootstrapper *Bootstrapper) {
-	bootstrapper.QueueExecutorFactory = &QueueExecutorFactory {
-
-	}
+	bootstrapper.QueueExecutorFactory = &QueueExecutorFactory{}
 }
 
 func (this *Bootstrapper) Bootstrap() {
