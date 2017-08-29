@@ -13,5 +13,9 @@ func NewID() int64 {
 		return 0
 	}
 	result := binary.LittleEndian.Uint64(b)
-	return int64(result)
+	returnValue := int64(result)
+	if returnValue < 0 {
+		returnValue = returnValue * -1
+	}
+	return returnValue
 }

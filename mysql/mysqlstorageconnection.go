@@ -140,7 +140,7 @@ func (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.Ca
 
 // GetNextPublishedMessageToBeEnqueued ...
 func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() (*cap.CapPublishedMessage, error) {
-	statement := "SELECT `Id`, UNIX_TIMESTAMP(`Added`) AS Added, `Content`, UNIX_TIMESTAMP(`ExpiresAt`) AS ExpiresAt, UNIX_TIMESTAMP(`LastWarnedTime`) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
+	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
 	conn, err := connection.OpenDbConnection()
 
 	if err != nil {
