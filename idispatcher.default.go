@@ -4,13 +4,13 @@ package cap
 type DefaultDispatcher struct {
 	StorageConnectionFactory *StorageConnectionFactory
 	CapOptions               *CapOptions
-	QueueExecutorFactory     *QueueExecutorFactory
+	QueueExecutorFactory     IQueueExecutorFactory
 }
 
 // NewDefaultDispatcher ...
 func NewDefaultDispatcher(capOptions *CapOptions,
 	storageConnectionFactory *StorageConnectionFactory,
-	factory *QueueExecutorFactory,
+	factory IQueueExecutorFactory,
 ) IProcessor {
 	return &DefaultDispatcher{
 		StorageConnectionFactory: storageConnectionFactory,
