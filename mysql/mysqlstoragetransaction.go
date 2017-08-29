@@ -7,12 +7,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// MySqlStorageTransaction ...
 type MySqlStorageTransaction struct {
 	Options       *cap.CapOptions
 	DbConnection  *sql.DB
 	DbTransaction *sql.Tx
 }
 
+// NewStorageTransaction ...
 func NewStorageTransaction(options *cap.CapOptions) (cap.IStorageTransaction, error) {
 	transaction := &MySqlStorageTransaction{}
 	transaction.Options = options
@@ -47,7 +49,7 @@ func (transaction *MySqlStorageTransaction) EnqueuePublishedMessage(message *cap
 		return err
 	}
 	if affectRows == 0 {
-		return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
+		return cap.NewCapError("EnqueuePublishedMessage : Database execution should affect 1 row but affected 0 row actually.")
 	}
 	return nil
 }
@@ -68,7 +70,7 @@ func (transaction *MySqlStorageTransaction) EnqueueReceivedMessage(message *cap.
 		return err
 	}
 	if affectRows == 0 {
-		return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
+		return cap.NewCapError("EnqueueReceivedMessage : Database execution should affect 1 row but affected 0 row actually.")
 	}
 	return nil
 }
@@ -91,7 +93,7 @@ func (transaction *MySqlStorageTransaction) UpdatePublishedMessage(message *cap.
 		return err
 	}
 	if affectRows == 0 {
-		return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
+		return cap.NewCapError("UpdatePublishedMessage : Database execution should affect 1 row but affected 0 row actually.")
 	}
 	return nil
 }
@@ -114,11 +116,12 @@ func (transaction *MySqlStorageTransaction) UpdateReceivedMessage(message *cap.C
 		return err
 	}
 	if affectRows == 0 {
-		return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
+		return cap.NewCapError("UpdateReceivedMessage : Database execution should affect 1 row but affected 0 row actually.")
 	}
 	return nil
 }
 
+// Commit ...
 func (transaction *MySqlStorageTransaction) Commit() error {
 	err := transaction.DbTransaction.Commit()
 	if err != nil {

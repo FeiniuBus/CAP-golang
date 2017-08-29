@@ -52,19 +52,24 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 
 	transaction, err := conn.Begin()
 	if err != nil {
+		_ = conn.Close()
 		return nil, err
 	}
 
 	statement := "SELECT `MessageId`,`MessageType` FROM `cap.queue` LIMIT 1 FOR UPDATE;"
-	statement += "DELETE FROM `cap.queue` LIMIT 1;"
 
 	stmt, err := transaction.Prepare(statement)
+
 	if err != nil {
+		_ = transaction.Rollback()
+		_ = conn.Close()
 		return nil, err
 	}
 
 	row, err := stmt.Query()
 	if err != nil {
+		_ = transaction.Rollback()
+		_ = conn.Close()
 		return nil, err
 	}
 
@@ -74,7 +79,36 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 	if row.Next() == true {
 		row.Scan(&messageID, &messageType)
 	} else {
+		_ = transaction.Rollback()
+		_ = conn.Close()
 		return nil, nil
+	}
+
+	deleteStatement := "DELETE FROM `cap.queue` LIMIT 1;"
+	deleteStmt, err := transaction.Prepare(deleteStatement)
+	if err != nil {
+		_ = transaction.Rollback()
+		_ = conn.Close()
+		return nil, err
+	}
+
+	result, err := deleteStmt.Exec()
+	if err != nil {
+		_ = transaction.Rollback()
+		_ = conn.Close()
+		return nil, err
+	}
+
+	affectRows, err := result.RowsAffected()
+	if err != nil {
+		_ = transaction.Rollback()
+		_ = conn.Close()
+		return nil, err
+	}
+	if affectRows == 0 {
+		_ = transaction.Rollback()
+		_ = conn.Close()
+		return nil, cap.NewCapError("FetchNextMessage : Database execution should affect 1 row but affected 0 row actually.")
 	}
 
 	fetchedMessage := NewFetchedMessage(messageID, messageType, conn, transaction)
@@ -246,7 +280,7 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 		return err
 	}
 	if rowAffected == int64(0) {
-		return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
+		return cap.NewCapError("StoreReceivedMessage : Database execution should affect 1 row but affected 0 row actually.")
 	}
 	return nil
 }
