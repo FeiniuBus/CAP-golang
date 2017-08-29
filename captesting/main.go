@@ -29,17 +29,21 @@ func CreateStorageConnection(options *cap.CapOptions) (cap.IStorageConnection, e
 }
 
 func init() {
+
 	CapOptions = cap.NewCapOptions()
 	ConnectionString = "root:kge2001@tcp(192.168.206.129:3306)/FeiniuCAP?charset=utf8"
 	CapOptions.ConnectionString = ConnectionString
-	ProcessorServer = cap.NewProcessorServer()
-	ProcessorServer.Container.Register(cap.NewFailedJobProcessor(CapOptions, StorageConnectionFactory))
+
+	StorageConnectionFactory = cap.NewStorageConnectionFactory(CreateStorageConnection)
+
+	ProcessorServer = cap.NewProcessorServer().(*cap.ProcessorServer)
+	//ProcessorServer.Container.Register(cap.NewFailedJobProcessor(CapOptions, StorageConnectionFactory))
 	ProcessorServer.Container.Register(cap.NewPublishQueuer(CapOptions, StorageConnectionFactory))
-	ProcessorServer.Container.Register(cap.NewSubscribeQueuer(CapOptions, StorageConnectionFactory))
-	ProcessorServer.Container.Register(cap.NewDefaultDispatcher(CapOptions, StorageConnectionFactory))
+	//ProcessorServer.Container.Register(cap.NewSubscribeQueuer(CapOptions, StorageConnectionFactory))
+	//ProcessorServer.Container.Register(cap.NewDefaultDispatcher(CapOptions, StorageConnectionFactory))
 
 	Bootstrapper = cap.NewBootstrapper(CapOptions, StorageConnectionFactory)
-	Bootstrapper.Servers = append(Bootstrapper.Servers,ProcessorServer)
+	Bootstrapper.Servers = append(Bootstrapper.Servers, ProcessorServer)
 
 	RabbitMQOptions = crabbitmq.RabbitMQConfig
 	RabbitMQOptions.SetHostName("192.168.206.128")
@@ -48,7 +52,6 @@ func init() {
 	crabbitmq.Prepare(Bootstrapper, *RabbitMQOptions)
 
 	PublisherFactory = cap.NewPublisherFactory(CreatePublisher)
-	StorageConnectionFactory = cap.NewStorageConnectionFactory(CreateStorageConnection)
 
 	publisher, err := PublisherFactory.CreatePublisher(CapOptions)
 	if err != nil {
