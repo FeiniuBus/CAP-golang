@@ -123,7 +123,9 @@ func (transaction *MySqlStorageTransaction) Commit() error {
 	err := transaction.DbTransaction.Commit()
 	if err != nil {
 		_ = transaction.DbTransaction.Rollback()
-		_ = transaction.DbConnection.Close()
+	}
+	_ = transaction.DbConnection.Close()
+	if err != nil {
 		return err
 	}
 	return nil
