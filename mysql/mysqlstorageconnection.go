@@ -113,7 +113,7 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 		return nil, cap.NewCapError("FetchNextMessage : Database execution should affect 1 row but affected 0 row actually.")
 	}
 
-	err := deleteStmt.Close()
+	err = deleteStmt.Close()
 	if err != nil {
 		conn.Close()
 		return nil, err
