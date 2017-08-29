@@ -1,11 +1,19 @@
 package cap
 
-type QueueExecutorPublishBase struct {
+type QueueExecutorPublish struct {
 	IQueueExecutor
-	StateChanger IStateChanger
+	StateChanger    IStateChanger
+	PublishDelegate IPublishDelegate
 }
 
-func (this *QueueExecutorPublishBase) Execute(connection IStorageConnection, feched IFetchedMessage) error {
+func NewQueueExecutorPublish(stateChanger IStateChanger, delegate IPublishDelegate) *QueueExecutorPublish {
+	return &QueueExecutorPublish{
+		StateChanger:    stateChanger,
+		PublishDelegate: delegate,
+	}
+}
+
+func (this *QueueExecutorPublish) Execute(connection IStorageConnection, feched IFetchedMessage) error {
 	message, err := connection.GetPublishedMessage(feched.GetMessageId())
 	if err != nil {
 		return err
@@ -21,7 +29,7 @@ func (this *QueueExecutorPublishBase) Execute(connection IStorageConnection, fec
 		return err
 	}
 
-	err = this.Publish(message.Name, message.Content)
+	err = this.PublishDelegate.Publish(message.Name, message.Content)
 
 	var newState IState = nil
 	if err != nil {
@@ -52,7 +60,7 @@ func (this *QueueExecutorPublishBase) Execute(connection IStorageConnection, fec
 	return nil
 }
 
-func (this *QueueExecutorPublishBase) UpdateMessageForRetry(message *CapPublishedMessage, connection IStorageConnection) (bool, error) {
+func (this *QueueExecutorPublish) UpdateMessageForRetry(message *CapPublishedMessage, connection IStorageConnection) (bool, error) {
 	retryBehavior := DefaultRetry
 
 	message.Retries = message.Retries + 1
@@ -78,8 +86,4 @@ func (this *QueueExecutorPublishBase) UpdateMessageForRetry(message *CapPublishe
 	}
 
 	return true, nil
-}
-
-func (this *QueueExecutorPublishBase) Publish(keyName, content string) error {
-	panic("must impl this function in child class")
 }

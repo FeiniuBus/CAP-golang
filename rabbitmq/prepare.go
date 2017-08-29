@@ -4,7 +4,7 @@ import (
 	"github.com/FeiniuBus/capgo"
 )
 
-func Prepare(bootstrapper *cap.Bootstrapper, rabbitMQOptions RabbitMQOptions ) {
+func Prepare(bootstrapper *cap.Bootstrapper, rabbitMQOptions RabbitMQOptions) {
 	consumerHandler := NewConsumerHandlerRabbitMQ(
 		rabbitMQOptions,
 		bootstrapper.CapOptions,
@@ -12,7 +12,7 @@ func Prepare(bootstrapper *cap.Bootstrapper, rabbitMQOptions RabbitMQOptions ) {
 		bootstrapper.ConnectionFactory,
 	)
 	bootstrapper.Servers = append(bootstrapper.Servers, consumerHandler)
-	bootstrapper.QueueExecutorFactory.SetPublishQueueExecutorCreateDelegate(func () cap.IQueueExecutor {
-		return NewPublishQueueExecutor(cap.NewStateChanger(), &rabbitMQOptions)
+	bootstrapper.QueueExecutorFactory.SetPublishQueueExecutorCreateDelegate(func() cap.IQueueExecutor {
+		return NewQueueExecutorPublish(cap.NewStateChanger(), NewPublishQueueExecutor(cap.NewStateChanger(), &rabbitMQOptions))
 	})
 }

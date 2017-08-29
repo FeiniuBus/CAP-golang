@@ -6,7 +6,8 @@ import (
 )
 
 type PublishQueueExecutor struct {
-	cap.QueueExecutorPublishBase
+	cap.IPublishDelegate
+	StateChanger  cap.IStateChanger
 	RabbitOptions *RabbitMQOptions
 }
 
@@ -17,10 +18,6 @@ func NewPublishQueueExecutor(stateChanger cap.IStateChanger, rabbitOptions *Rabb
 	rtv.StateChanger = stateChanger
 
 	return rtv
-}
-
-func (this *PublishQueueExecutor) Execute(connection cap.IStorageConnection, feched cap.IFetchedMessage) error {
-	return this.QueueExecutorPublishBase.Execute(connection, feched)
 }
 
 func (this *PublishQueueExecutor) Publish(keyName, content string) error {
