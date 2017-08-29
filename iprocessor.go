@@ -1,5 +1,6 @@
 package cap
 
-type IProcessor interface{
-	Process(context *ProcessingContext) error
+// IProcessor bla.
+type IProcessor interface {
+	Process(context *ProcessingContext) (*ProcessResult, error)
 }

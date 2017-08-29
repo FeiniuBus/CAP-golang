@@ -43,7 +43,7 @@ func (publihser *MySqlPublisher) Publish(name string, content string, connection
 	}
 	statement := "INSERT INTO `cap.published` (`Name`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`,`MessageId`,`TransactionId`)"
 	statement += "VALUES(?,?,?,?,?,?,?,?)"
-	result, err := dbTransaction.Exec(statement, name, content, 0, time.Now(), nil, "Scheduled",cap.NewId(),cap.NewId())
+	result, err := dbTransaction.Exec(statement, name, content, 0, time.Now(), nil, "Scheduled", cap.NewID(), cap.NewID())
 	if err != nil {
 		return err
 	}

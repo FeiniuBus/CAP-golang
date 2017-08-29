@@ -1,6 +1,11 @@
 package cap
 
+import (
+	"sync"
+)
+
+// IProcessServer ...
 type IProcessServer interface {
 	Start()
-	Close()
+	WaitForClose(wg *sync.WaitGroup)
 }

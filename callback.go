@@ -4,6 +4,7 @@ import (
 	"errors"
 )
 
+// Callback provide Sample Handler.
 type Callback struct {
 }
 

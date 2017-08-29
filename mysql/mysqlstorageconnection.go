@@ -89,7 +89,7 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 
 	for rows.Next() {
 		item := &cap.CapPublishedMessage{}
-		err = rows.Scan(&item.Id,&item.Added,&item.Content,&item.ExpiresAt,&item.LastWarnedTime,&item.MessageId,&item.Name,&item.Retries,&item.StatusName,&item.TransactionId)
+		err = rows.Scan(&item.Id, &item.Added, &item.Content, &item.ExpiresAt, &item.LastWarnedTime, &item.MessageId, &item.Name, &item.Retries, &item.StatusName, &item.TransactionId)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +98,7 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 	return returnValue, nil
 }
 
-func  (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.CapReceivedMessage,error){
+func (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.CapReceivedMessage, error) {
 	statement := "SELECT `Id`, `Added`, `Content`, UNIX_TIMESTAMP(`ExpiresAt`), `Group`, UNIX_TIMESTAMP(`LastWarnedTime`), `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Failed';"
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
@@ -116,7 +116,7 @@ func  (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.C
 
 	for rows.Next() {
 		item := &cap.CapReceivedMessage{}
-		err = rows.Scan(&item.Id,&item.Added,&item.Content,&item.ExpiresAt,&item.Group,&item.LastWarnedTime, &item.MessageId, &item.Name, &item.Retries, &item.StatusName, &item.TransactionId)
+		err = rows.Scan(&item.Id, &item.Added, &item.Content, &item.ExpiresAt, &item.Group, &item.LastWarnedTime, &item.MessageId, &item.Name, &item.Retries, &item.StatusName, &item.TransactionId)
 		if err != nil {
 			return nil, err
 		}
@@ -128,7 +128,7 @@ func  (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.C
 func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() (*cap.CapPublishedMessage, error) {
 	statement := "SELECT `Id`, `Added`, `Content`, UNIX_TIMESTAMP(`ExpiresAt`), UNIX_TIMESTAMP(`LastWarnedTime`), `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
 	conn, err := connection.OpenDbConnection()
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() 
 	if conn == nil {
 		return nil, cap.NewCapError("Database connection is nil.")
 	}
-                                                                                               
+
 	defer conn.Close()
 
 	rows, err := conn.Query(statement)
@@ -145,9 +145,9 @@ func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() 
 	}
 	message := &cap.CapPublishedMessage{}
 	if rows.Next() {
-		rows.Scan(&message.Id,&message.Added,&message.Content,&message.ExpiresAt,&message.LastWarnedTime,&message.MessageId,&message.Name,&message.Retries,&message.StatusName,&message.TransactionId)
+		rows.Scan(&message.Id, &message.Added, &message.Content, &message.ExpiresAt, &message.LastWarnedTime, &message.MessageId, &message.Name, &message.Retries, &message.StatusName, &message.TransactionId)
 	}
-	
+
 	return message, nil
 }
 
@@ -219,7 +219,7 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 	if err != nil {
 		return err
 	}
-	result, err := conn.Exec(statement, message.Name, message.Group, message.Content, message.Retries, message.Added, message.ExpiresAt, message.StatusName, cap.NewId(),cap.NewId())
+	result, err := conn.Exec(statement, message.Name, message.Group, message.Content, message.Retries, message.Added, message.ExpiresAt, message.StatusName, cap.NewID(), cap.NewID())
 	if err != nil {
 		return err
 	}

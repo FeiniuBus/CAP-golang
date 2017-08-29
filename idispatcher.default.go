@@ -6,21 +6,27 @@ type DefaultDispatcher struct {
 	QueueExecutorFactory     *QueueExecutorFactory
 }
 
-func NewDefaultDispatcher(storageConnectionFactory *StorageConnectionFactory,
-	capOptions *CapOptions) *DefaultDispatcher {
+func NewDefaultDispatcher(capOptions *CapOptions,
+	storageConnectionFactory *StorageConnectionFactory,
+) IProcessor {
 	return &DefaultDispatcher{
 		StorageConnectionFactory: storageConnectionFactory,
 		CapOptions:               capOptions,
 	}
 }
 
-func (this *DefaultDispatcher) Process(context *ProcessingContext) error {
+func (this *DefaultDispatcher) Process(context *ProcessingContext) (*ProcessResult, error) {
 	err := context.ThrowIfStopping()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return this.ProcessCore(context)
+	err = this.ProcessCore(context)
+	if err != nil {
+		return nil, err
+	}
+
+	return ProcessSleeping(this.CapOptions.PoolingDelay), nil
 }
 
 func (this *DefaultDispatcher) ProcessCore(context *ProcessingContext) error {
