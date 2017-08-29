@@ -39,7 +39,7 @@ func NewBootstrapper(
 
 // initBootstrapper initlize Bootstrapper.
 func initBootstrapper(bootstrapper *Bootstrapper) {
-	bootstrapper.QueueExecutorFactory = &QueueExecutorFactory{}
+	bootstrapper.QueueExecutorFactory = NewQueueExecutorFactory(bootstrapper.Register)
 }
 
 // Bootstrap start CAP servers.

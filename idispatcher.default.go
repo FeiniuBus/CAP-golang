@@ -10,12 +10,12 @@ type DefaultDispatcher struct {
 // NewDefaultDispatcher ...
 func NewDefaultDispatcher(capOptions *CapOptions,
 	storageConnectionFactory *StorageConnectionFactory,
-	register *CallbackRegister,
+	factory *QueueExecutorFactory,
 ) IProcessor {
 	return &DefaultDispatcher{
 		StorageConnectionFactory: storageConnectionFactory,
 		CapOptions:               capOptions,
-		QueueExecutorFactory:     NewQueueExecutorFactory(register),
+		QueueExecutorFactory:     factory,
 	}
 }
 
