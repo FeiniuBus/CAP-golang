@@ -36,8 +36,13 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		return ProcessSleeping(processor.Options.PoolingDelay), nil
 	}
 
-	state := NewScheduledState()
+	state := NewEnqueuedState()
 	transaction, err := connection.CreateTransaction()
+	if err != nil {
+		return nil, err
+	}
+
+	err = transaction.EnqueuePublishedMessage(message)
 	if err != nil {
 		return nil, err
 	}
@@ -52,10 +57,6 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		return nil, err
 	}
 
-	err = context.ThrowIfStopping()
-	if err != nil {
-		return nil, err
-	}
 	err = context.ThrowIfStopping()
 	if err != nil {
 		return nil, err
