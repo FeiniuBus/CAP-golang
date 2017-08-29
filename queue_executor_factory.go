@@ -24,6 +24,6 @@ func (this *QueueExecutorFactory) GetInstance(messageType string) IQueueExecutor
 	if messageType == SUBSCRIBE {
 		return NewQueueExecutorSubscribe(this.Register)
 	} else {
-		return this.GetPublishQueueExecutorCreateDelegate()()
+		return this.PublishQueueExecutorCreateDelegate()
 	}
 }
