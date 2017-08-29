@@ -100,5 +100,9 @@ func (transaction *MySqlStorageTransaction) Commit() error {
 	if err != nil {
 		return err
 	}
+	err = transaction.DbConnection.Close()
+	if err != nil {
+		return err
+	}
 	return nil
 }
