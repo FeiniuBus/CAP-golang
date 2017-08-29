@@ -1,13 +1,7 @@
 package cap
 
-type IPublish interface {
-	Publish(keyName, content string) error
-}
-
 type QueueExecutorPublishBase struct {
 	IQueueExecutor
-	IPublish
-
 	StateChanger IStateChanger
 }
 
