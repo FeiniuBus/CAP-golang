@@ -31,28 +31,44 @@ func NewStorageTransaction(options *cap.CapOptions) (cap.IStorageTransaction, er
 	return transaction, nil
 }
 
+// EnqueuePublishedMessage ...
 func (transaction *MySqlStorageTransaction) EnqueuePublishedMessage(message *cap.CapPublishedMessage) error {
 	statement := "INSERT INTO `cap.queue` VALUES (?,?)"
 	stmt, err := transaction.DbTransaction.Prepare(statement)
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(message.Id, 0)
+	result, err := stmt.Exec(message.Id, 0)
 	if err != nil {
 		return err
+	}
+	affectRows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affectRows == 0 {
+		return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
 	}
 	return nil
 }
 
+// EnqueueReceivedMessage ...
 func (transaction *MySqlStorageTransaction) EnqueueReceivedMessage(message *cap.CapReceivedMessage) error {
 	statement := "INSERT INTO `cap.queue` VALUES (?,?)"
 	stmt, err := transaction.DbTransaction.Prepare(statement)
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(message.Id, 1)
+	result, err := stmt.Exec(message.Id, 1)
 	if err != nil {
 		return err
+	}
+	affectRows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affectRows == 0 {
+		return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
 	}
 	return nil
 }
@@ -80,6 +96,7 @@ func (transaction *MySqlStorageTransaction) UpdatePublishedMessage(message *cap.
 	return nil
 }
 
+// UpdateReceivedMessage ...
 func (transaction *MySqlStorageTransaction) UpdateReceivedMessage(message *cap.CapReceivedMessage) error {
 	statement := "UPDATE `cap.received`"
 	statement += " SET `Retries` = ?,`ExpiresAt` = FROM_UNIXTIME(?),`StatusName`= ?"
@@ -88,9 +105,16 @@ func (transaction *MySqlStorageTransaction) UpdateReceivedMessage(message *cap.C
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(message.Retries, message.ExpiresAt, message.StatusName, message.Id)
+	result, err := stmt.Exec(message.Retries, message.ExpiresAt, message.StatusName, message.Id)
 	if err != nil {
 		return err
+	}
+	affectRows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affectRows == 0 {
+		return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
 	}
 	return nil
 }
