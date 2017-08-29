@@ -1,6 +1,10 @@
 package cap
 
 import (
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -25,12 +29,13 @@ func (server *ProcessorServer) Start() {
 	}
 }
 
+// StopTheWorld ...
 func (server *ProcessorServer) StopTheWorld() chan bool {
 	var result chan bool
-	result = make(chan bool, 1)
+	result <- true
 	for _, val := range server.Processors {
 		if val.Status == "Processing" {
-			result = make(chan bool, 0)
+			result <- false
 		}
 	}
 	return result
@@ -39,11 +44,14 @@ func (server *ProcessorServer) StopTheWorld() chan bool {
 // Close bla.
 func (server *ProcessorServer) Close() {
 	server.Context.Stop()
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGTERM)
 
 	go func() {
 		for {
 			select {
 			case <-server.StopTheWorld():
+				signal.Stop(c)
 				//TODO : Kill process
 				break
 
@@ -52,4 +60,9 @@ func (server *ProcessorServer) Close() {
 			}
 		}
 	}()
+
+	for {
+		s := <-c
+		fmt.Println("Got signal:", s)
+	}
 }

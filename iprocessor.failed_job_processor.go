@@ -7,6 +7,15 @@ type FailedJobProcessor struct {
 	StorageConnectionFactory *StorageConnectionFactory
 }
 
+// NewFailedJobProcessor...
+func NewFailedJobProcessor(capOptions *CapOptions, storageConnectionFactory *StorageConnectionFactory) IProcessor {
+	return &FailedJobProcessor{
+		Options:                  capOptions,
+		StorageConnectionFactory: storageConnectionFactory,
+		StateChanger:             NewStateChanger(),
+	}
+}
+
 // Process ...
 func (processor *FailedJobProcessor) Process(context *ProcessingContext) (*ProcessResult, error) {
 	connection, err := processor.StorageConnectionFactory.CreateStorageConnection(processor.Options)
