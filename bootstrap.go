@@ -43,7 +43,7 @@ func (bootstrapper *Bootstrapper) Bootstrap() {
 // Close all started servers.
 func (bootstrapper *Bootstrapper) Close() {
 	for _, server := range bootstrapper.Servers {
-		server.Close()
+		server.WaitForClose()
 	}
 }
 
