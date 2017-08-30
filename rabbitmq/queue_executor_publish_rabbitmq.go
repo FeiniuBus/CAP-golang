@@ -1,6 +1,8 @@
 package rabbitmq
 
 import (
+	"log"
+
 	"github.com/FeiniuBus/capgo"
 	"github.com/streadway/amqp"
 )
@@ -21,6 +23,8 @@ func NewPublishQueueExecutor(stateChanger cap.IStateChanger, rabbitOptions *Rabb
 }
 
 func (this *PublishQueueExecutor) Publish(keyName, content string) error {
+	log.Println("publish message " + keyName + "[" + content + "]")
+
 	connectString := ConnectString(this.RabbitOptions)
 
 	conn, err := amqp.Dial(connectString)
