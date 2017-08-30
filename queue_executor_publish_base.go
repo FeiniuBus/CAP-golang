@@ -23,6 +23,7 @@ func (this *QueueExecutorPublish) Execute(connection IStorageConnection, feched 
 	if err != nil {
 		return err
 	}
+	defer transaction.Dispose()
 
 	err = this.StateChanger.ChangePublishedMessage(message, NewProcessingState(), transaction)
 	if err != nil {
