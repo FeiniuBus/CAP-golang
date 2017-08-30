@@ -30,6 +30,11 @@ func (this *QueueExecutorSubscribe) Execute(connection IStorageConnection, feche
 		return err
 	}
 
+	err = transaction.Commit()
+	if err != nil {
+		return err
+	}
+
 	var newState IState
 	err = this.executeSubscribeAsync(message)
 	if err != nil {
@@ -54,6 +59,11 @@ func (this *QueueExecutorSubscribe) Execute(connection IStorageConnection, feche
 	defer transaction.Dispose()
 
 	err = stateChanger.ChangeReceivedMessageState(message, newState, transaction)
+	if err != nil {
+		return err
+	}
+
+	err = transaction.Commit()
 	if err != nil {
 		return err
 	}
