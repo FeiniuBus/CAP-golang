@@ -30,6 +30,11 @@ func (this *QueueExecutorPublish) Execute(connection IStorageConnection, feched 
 		return err
 	}
 
+	err = transaction.Commit()
+	if err != nil {
+		return err
+	}
+
 	err = this.PublishDelegate.Publish(message.Name, message.Content)
 
 	var newState IState = nil
@@ -48,7 +53,18 @@ func (this *QueueExecutorPublish) Execute(connection IStorageConnection, feched 
 		newState = NewSucceededState()
 	}
 
+	transaction, err = connection.CreateTransaction()
+	if err != nil {
+		return err
+	}
+	defer transaction.Dispose()
+
 	err = this.StateChanger.ChangePublishedMessage(message, newState, transaction)
+	if err != nil {
+		return err
+	}
+
+	err = transaction.Commit()
 	if err != nil {
 		return err
 	}
