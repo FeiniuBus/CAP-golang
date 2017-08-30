@@ -70,7 +70,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 				TransactionID: transactionID,
 				MessageID:     cap.NewID(),
 			},
-			Content: jsonStr,
+			Content: string(jsonStr),
 		}
 
 		messageContent, err := json.Marshal(feiniuMessage)
