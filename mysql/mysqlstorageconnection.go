@@ -252,7 +252,9 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 		return err
 	}
 
-	var feiniuMessage cap.FeiniuBusMessage
+	feiniuMessage := cap.FeiniuBusMessage{
+		MetaData: cap.FeiniuBusMessageMetaData{},
+	}
 	err = json.Unmarshal([]byte(message.Content), feiniuMessage)
 	if err != nil {
 		return err
