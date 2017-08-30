@@ -246,7 +246,7 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 	feiniuMessage := cap.FeiniuBusMessage{
 		MetaData: cap.FeiniuBusMessageMetaData{},
 	}
-	err = json.Unmarshal([]byte(message.Content), feiniuMessage)
+	err = json.Unmarshal([]byte(message.Content), &feiniuMessage)
 	if err != nil {
 		if connection.Options.LogFunction != nil {
 			connection.Options.LogFunction(err.Error(), cap.NewInfomationLevel())
