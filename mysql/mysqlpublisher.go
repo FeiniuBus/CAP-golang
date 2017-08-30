@@ -81,7 +81,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 			return err
 		}
 
-		result, err := dbTransaction.Exec(statement, val.Name, messageContent, 0, time.Now(), nil, "Scheduled", feiniuMessage.MetaData.MessageID, transactionID)
+		result, err := dbTransaction.Exec(statement, val.Name, string(messageContent), 0, time.Now(), nil, "Scheduled", feiniuMessage.MetaData.MessageID, transactionID)
 
 		if err != nil {
 			if publisher.IsCapOpenedTrans {
