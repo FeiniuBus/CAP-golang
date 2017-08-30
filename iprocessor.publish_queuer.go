@@ -44,6 +44,7 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 
 	err = processor.StateChanger.ChangePublishedMessage(message, state, transaction)
 	if err != nil {
+		transaction.Dispose()
 		return nil, err
 	}
 

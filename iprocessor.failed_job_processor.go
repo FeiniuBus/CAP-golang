@@ -53,6 +53,7 @@ func (processor *FailedJobProcessor) ProcessPublishedMessage(connection IStorage
 		}
 		err = processor.StateChanger.ChangePublishedMessage(message, NewEnqueuedState(), transaction)
 		if err != nil {
+			transaction.Dispose()
 			return err
 		}
 		err = transaction.Commit()
@@ -82,6 +83,7 @@ func (processor *FailedJobProcessor) ProcessReceivedMessage(connection IStorageC
 		}
 		err = processor.StateChanger.ChangeReceivedMessageState(message, NewEnqueuedState(), transaction)
 		if err != nil {
+			transaction.Dispose()
 			return err
 		}
 		err = transaction.Commit()

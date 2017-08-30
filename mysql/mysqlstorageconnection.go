@@ -35,6 +35,16 @@ func (connection MySqlStorageConnection) OpenDbConnection() (*sql.DB, error) {
 	return conn, nil
 }
 
+// BeginTransaction ...
+func (connection MySqlStorageConnection) BeginTransaction(dbConnection *sql.DB) (*sql.Tx, error) {
+	options := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
+	transaction, err := dbConnection.BeginTx(context.Background(), options)
+	if err != nil {
+		return nil, err
+	}
+	return transaction, nil
+}
+
 // CreateTransaction ...
 func (connection *MySqlStorageConnection) CreateTransaction() (cap.IStorageTransaction, error) {
 	transaction, err := NewStorageTransaction(connection.Options)
@@ -51,10 +61,7 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 		return nil, err
 	}
 
-	options := &sql.TxOptions{}
-	options.Isolation = sql.LevelReadCommitted
-
-	transaction, err := conn.BeginTx(context.Background(), options)
+	transaction, err := connection.BeginTransaction(conn)
 	if err != nil {
 		conn.Close()
 		return nil, err

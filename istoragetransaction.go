@@ -1,14 +1,15 @@
 package cap
 
-type IStorageTransaction interface{
+type IStorageTransaction interface {
+	Commit() error
 
-	Commit() error;
+	EnqueuePublishedMessage(message *CapPublishedMessage) error
 
-	EnqueuePublishedMessage(message *CapPublishedMessage) error;
+	EnqueueReceivedMessage(message *CapReceivedMessage) error
 
-	EnqueueReceivedMessage(message *CapReceivedMessage) error;
+	UpdatePublishedMessage(message *CapPublishedMessage) error
 
-	UpdatePublishedMessage(message *CapPublishedMessage) error;
+	UpdateReceivedMessage(message *CapReceivedMessage) error
 
-	UpdateReceivedMessage(message *CapReceivedMessage) error;
+	Dispose()
 }

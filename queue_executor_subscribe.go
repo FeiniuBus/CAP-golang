@@ -23,6 +23,8 @@ func (this *QueueExecutorSubscribe) Execute(connection IStorageConnection, feche
 		return err
 	}
 
+	defer transaction.Dispose()
+
 	err = stateChanger.ChangeReceivedMessageState(message, NewProcessingState(), transaction)
 	if err != nil {
 		return err
@@ -88,6 +90,7 @@ func (this *QueueExecutorSubscribe) updateMessageForRetryAsync(receivedMessage *
 
 	err = transaction.UpdateReceivedMessage(receivedMessage)
 	if err != nil {
+		transaction.Dispose()
 		return false, err
 	}
 

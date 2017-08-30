@@ -74,6 +74,7 @@ func (this *QueueExecutorPublish) UpdateMessageForRetry(message *CapPublishedMes
 	if err != nil {
 		return false, err
 	}
+	defer transaction.Dispose()
 
 	err = transaction.UpdatePublishedMessage(message)
 	if err != nil {

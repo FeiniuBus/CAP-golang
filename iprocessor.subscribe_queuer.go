@@ -37,6 +37,7 @@ func (processor *SubscribeQueuer) Process(context *ProcessingContext) (*ProcessR
 	stateChanger := NewStateChanger()
 	err = stateChanger.ChangeReceivedMessageState(message, NewEnqueuedState(), transaction)
 	if err != nil {
+		transaction.Dispose()
 		return nil, err
 	}
 
