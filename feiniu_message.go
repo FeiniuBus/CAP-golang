@@ -3,7 +3,7 @@ package cap
 // FeiniuBusMessage ...
 type FeiniuBusMessage struct {
 	MetaData FeiniuBusMessageMetaData `json:"meta"`
-	Content  []byte]                   `json:"content"`
+	Content  []byte                   `json:"content"`
 }
 
 // FeiniuBusMessageMetaData ...
