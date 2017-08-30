@@ -63,6 +63,7 @@ func (fetchedMessage *MySqlFetchedMessage) Dispose() error {
 	fetchedMessage.ticker.Stop()
 	err := fetchedMessage.dbConnection.Close()
 	fetchedMessage.mutext.Unlock()
+
 	return err
 }
 

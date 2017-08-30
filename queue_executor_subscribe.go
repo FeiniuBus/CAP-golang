@@ -51,6 +51,7 @@ func (this *QueueExecutorSubscribe) Execute(connection IStorageConnection, feche
 	if err != nil {
 		return err
 	}
+	defer transaction.Dispose()
 
 	err = stateChanger.ChangeReceivedMessageState(message, newState, transaction)
 	if err != nil {
