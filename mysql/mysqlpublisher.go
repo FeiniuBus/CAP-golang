@@ -32,7 +32,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 	var dbTransaction *sql.Tx
 
 	if connection == nil {
-		connectionString, err := publihser.Options.GetConnectionString()
+		connectionString, err := publisher.Options.GetConnectionString()
 		if err != nil {
 			return err
 		}
@@ -44,7 +44,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 		if err != nil {
 			return err
 		}
-		publihser.IsCapOpenedTrans = true
+		publisher.IsCapOpenedTrans = true
 	} else {
 		dbConnection = connection.(*sql.DB)
 		dbTransaction = transaction.(*sql.Tx)
@@ -58,7 +58,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 	for _, val := range descriptors {
 		jsonStr, err := json.Marshal(val.Content)
 		if err != nil {
-			if publihser.IsCapOpenedTrans{
+			if publisher.IsCapOpenedTrans {
 				_ = dbTransaction.Rollback()
 				_ = dbConnection.Close()
 			}
@@ -72,12 +72,19 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 			Content: jsonStr,
 		}
 
-		messageContent := json.Marshal(feiniuMessage)
+		messageContent, err := json.Marshal(feiniuMessage)
+		if err != nil {
+			if publisher.IsCapOpenedTrans {
+				_ = dbTransaction.Rollback()
+				_ = dbConnection.Close()
+			}
+			return err
+		}
 
 		result, err := dbTransaction.Exec(statement, val.Name, messageContent, 0, time.Now(), nil, "Scheduled", feiniuMessage.MetaData.MessageID, transactionID)
 
 		if err != nil {
-			if publihser.IsCapOpenedTrans{
+			if publisher.IsCapOpenedTrans {
 				_ = dbTransaction.Rollback()
 				_ = dbConnection.Close()
 			}
@@ -85,14 +92,14 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 		}
 		affectedRows, err := result.RowsAffected()
 		if err != nil {
-			if publihser.IsCapOpenedTrans{
+			if publisher.IsCapOpenedTrans {
 				_ = dbTransaction.Rollback()
 				_ = dbConnection.Close()
 			}
 			return err
 		}
 		if affectedRows == int64(0) {
-			if publihser.IsCapOpenedTrans{
+			if publisher.IsCapOpenedTrans {
 				_ = dbTransaction.Rollback()
 				_ = dbConnection.Close()
 			}
@@ -100,9 +107,9 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 		}
 	}
 
-	if publihser.IsCapOpenedTrans {
-		err = dbTransaction.Commit()
-		err = dbConnection.Close()
+	if publisher.IsCapOpenedTrans {
+		err := dbTransaction.Commit()
+		_ = dbConnection.Close()
 		if err != nil {
 			return err
 		}
@@ -110,11 +117,11 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 }
 
 func (publisher *MySqlPublisher) PublishOne(name string, content interface{}, connection interface{}, transaction interface{}) error {
-	descriptors := make([]*cap.MessageDescriptor,0)
-	descriptors = append(descriptors,&cap.MessageDescriptor{
-		Name: name,
-		Content: content
+	descriptors := make([]*cap.MessageDescriptor, 0)
+	descriptors = append(descriptors, &cap.MessageDescriptor{
+		Name:    name,
+		Content: content,
 	})
-	err := publisher.Publish(descriptors,connection,transaction)
+	err := publisher.Publish(descriptors, connection, transaction)
 	return err
 }
