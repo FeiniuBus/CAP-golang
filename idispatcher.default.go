@@ -21,23 +21,28 @@ func NewDefaultDispatcher(capOptions *CapOptions,
 
 // Process ...
 func (dispatcher *DefaultDispatcher) Process(context *ProcessingContext) (*ProcessResult, error) {
-	err := context.ThrowIfStopping()
-	if err != nil {
-		return nil, err
-	}
+	for {
+		err := context.ThrowIfStopping()
+		if err != nil {
+			return nil, err
+		}
 
-	err = dispatcher.ProcessCore(context)
-	if err != nil {
-		return nil, err
+		worked, err := dispatcher.ProcessCore(context)
+		if err != nil {
+			return nil, err
+		}
+
+		if !worked {
+			break
+		}
 	}
 
 	return ProcessSleeping(dispatcher.CapOptions.PoolingDelay), nil
 }
 
 // ProcessCore ...
-func (dispatcher *DefaultDispatcher) ProcessCore(context *ProcessingContext) error {
-	_, err := dispatcher.step(context)
-	return err
+func (dispatcher *DefaultDispatcher) ProcessCore(context *ProcessingContext) (bool, error) {
+	return dispatcher.step(context)
 }
 
 func (dispatcher *DefaultDispatcher) step(context *ProcessingContext) (bool, error) {
