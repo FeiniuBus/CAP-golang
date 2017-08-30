@@ -70,6 +70,7 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 	statement := "SELECT `MessageId`,`MessageType` FROM `cap.queue` LIMIT 1 FOR UPDATE;DELETE FROM `cap.queue` LIMIT 1;"
 
 	row, err := transaction.Query(statement)
+	defer row.Close()
 	if err != nil {
 		conn.Close()
 		return nil, err
