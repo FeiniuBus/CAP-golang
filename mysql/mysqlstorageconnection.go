@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/FeiniuBus/capgo"
@@ -250,7 +251,14 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 	if err != nil {
 		return err
 	}
-	result, err := conn.Exec(statement, message.Name, message.Group, message.Content, message.Retries, time.Now(), nil, message.StatusName, message.MessageId, message.TransactionId)
+
+	var feiniuMessage cap.FeiniuBusMessage
+	err = json.Unmarshal([]byte(message.Content), feiniuMessage)
+	if err != nil {
+		return err
+	}
+
+	result, err := conn.Exec(statement, message.Name, message.Group, feiniuMessage.Content, message.Retries, time.Now(), nil, message.StatusName, feiniuMessage.MetaData.MessageID, feiniuMessage.MetaData.TransactionID)
 	if err != nil {
 		return err
 	}

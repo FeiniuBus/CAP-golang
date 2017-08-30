@@ -3,7 +3,6 @@ package mysql
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/FeiniuBus/capgo"
@@ -75,7 +74,6 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 
 		messageContent, err := json.Marshal(feiniuMessage)
 		messageStr := string(messageContent)
-		fmt.Println(messageStr)
 		if err != nil {
 			if publisher.IsCapOpenedTrans {
 				_ = dbTransaction.Rollback()
