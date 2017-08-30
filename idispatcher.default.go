@@ -56,6 +56,7 @@ func (dispatcher *DefaultDispatcher) step(context *ProcessingContext) (bool, err
 	if err != nil {
 		return false, err
 	}
+	defer fetched.Dispose()
 
 	if fetched == nil {
 		return true, nil
@@ -73,8 +74,6 @@ func (dispatcher *DefaultDispatcher) step(context *ProcessingContext) (bool, err
 	if err != nil {
 		return false, err
 	}
-
-	err = fetched.Dispose()
 
 	return true, err
 }
