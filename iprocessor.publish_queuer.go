@@ -22,40 +22,47 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 	var message *CapPublishedMessage
 	connection, err := processor.StorageConnectionFactory.CreateStorageConnection(processor.Options)
 
-	message, err = connection.GetNextPublishedMessageToBeEnqueued()
-	if err != nil {
-		return nil, err
-	}
-
-	if message == nil || message.Id == 0 {
-		err = context.ThrowIfStopping()
+	for {
+		if context.IsStopping {
+			break
+		}
+		message, err = connection.GetNextPublishedMessageToBeEnqueued()
 		if err != nil {
 			return nil, err
 		}
 
-		return ProcessSleeping(processor.Options.PoolingDelay), nil
-	}
+		if message == nil || message.Id == 0 {
+			err = context.ThrowIfStopping()
+			if err != nil {
+				return nil, err
+			}
 
-	state := NewEnqueuedState()
-	transaction, err := connection.CreateTransaction()
-	if err != nil {
-		return nil, err
-	}
+			break
+		}
 
-	err = processor.StateChanger.ChangePublishedMessage(message, state, transaction)
-	if err != nil {
+		state := NewEnqueuedState()
+		transaction, err := connection.CreateTransaction()
+		if err != nil {
+			return nil, err
+		}
+
+		err = processor.StateChanger.ChangePublishedMessage(message, state, transaction)
+		if err != nil {
+			transaction.Dispose()
+			return nil, err
+		}
+
+		err = transaction.Commit()
+		if err != nil {
+			return nil, err
+		}
+
 		transaction.Dispose()
-		return nil, err
-	}
 
-	err = transaction.Commit()
-	if err != nil {
-		return nil, err
-	}
-
-	err = context.ThrowIfStopping()
-	if err != nil {
-		return nil, err
+		err = context.ThrowIfStopping()
+		if err != nil {
+			return nil, err
+		}
 	}
 	return ProcessSleeping(processor.Options.PoolingDelay), nil
 }

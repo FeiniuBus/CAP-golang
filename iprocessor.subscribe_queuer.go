@@ -21,35 +21,39 @@ func (processor *SubscribeQueuer) Process(context *ProcessingContext) (*ProcessR
 		return nil, err
 	}
 
-	message, err := conn.GetNextReceviedMessageToBeEnqueued()
-	if err != nil {
-		return nil, err
-	}
-	if message == nil || message.Id == 0 {
-		return nil, nil
-	}
+	for {
+		if context.IsStopping {
+			break
+		}
+		message, err := conn.GetNextReceviedMessageToBeEnqueued()
+		if err != nil {
+			return nil, err
+		}
+		if message == nil || message.Id == 0 {
+			break
+		}
 
-	transaction, err := conn.CreateTransaction()
-	if err != nil {
-		return nil, err
-	}
+		transaction, err := conn.CreateTransaction()
+		if err != nil {
+			return nil, err
+		}
 
-	stateChanger := NewStateChanger()
-	err = stateChanger.ChangeReceivedMessageState(message, NewEnqueuedState(), transaction)
-	if err != nil {
+		stateChanger := NewStateChanger()
+		err = stateChanger.ChangeReceivedMessageState(message, NewEnqueuedState(), transaction)
+		if err != nil {
+			transaction.Dispose()
+			return nil, err
+		}
+
+		err = transaction.Commit()
+		if err != nil {
+			return nil, err
+		}
 		transaction.Dispose()
-		return nil, err
 	}
-
-	err = transaction.Commit()
-	if err != nil {
-		return nil, err
-	}
-
 	err = context.ThrowIfStopping()
 	if err != nil {
 		return nil, err
 	}
-
 	return ProcessSleeping(processor.Options.PoolingDelay), nil
 }
