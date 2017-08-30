@@ -1,6 +1,6 @@
 package cap
 
-
-type IPublisher interface {  
-	Publish(name string, content string, connection interface{}, transaction interface{}) error  
+type IPublisher interface {
+	Publish(descriptors []*MessageDescriptor, connection interface{}, transaction interface{}) error
+	PublishOne(name string, content interface, connection interface{}, transaction interface{}) error
 }

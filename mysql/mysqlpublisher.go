@@ -2,24 +2,32 @@ package mysql
 
 import (
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/FeiniuBus/capgo"
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// MySqlPublisher ..
 type MySqlPublisher struct {
 	Options          *cap.CapOptions
 	IsCapOpenedTrans bool
 }
 
+// NewPublisher ..
 func NewPublisher(options *cap.CapOptions) cap.IPublisher {
 	pubisher := &MySqlPublisher{}
 	pubisher.Options = options
 	return pubisher
 }
 
-func (publihser *MySqlPublisher) Publish(name string, content string, connection interface{}, transaction interface{}) error {
+// Publish ..
+func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, connection interface{}, transaction interface{}) error {
+	if len(descriptors) == 0 {
+		return nil
+	}
+
 	var dbConnection *sql.DB
 	var dbTransaction *sql.Tx
 
@@ -41,18 +49,55 @@ func (publihser *MySqlPublisher) Publish(name string, content string, connection
 		dbConnection = connection.(*sql.DB)
 		dbTransaction = transaction.(*sql.Tx)
 	}
+
 	statement := "INSERT INTO `cap.published` (`Name`,`Content`,`Retries`,`Added`,`ExpiresAt`,`StatusName`,`MessageId`,`TransactionId`)"
 	statement += "VALUES(?,?,?,?,?,?,?,?)"
-	result, err := dbTransaction.Exec(statement, name, content, 0, time.Now(), nil, "Scheduled", cap.NewID(), cap.NewID())
-	if err != nil {
-		return err
-	}
-	affectedRows, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if affectedRows == int64(0) {
-		return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
+
+	transactionID := cap.NewID()
+
+	for _, val := range descriptors {
+		jsonStr, err := json.Marshal(val.Content)
+		if err != nil {
+			if publihser.IsCapOpenedTrans{
+				_ = dbTransaction.Rollback()
+				_ = dbConnection.Close()
+			}
+			return err
+		}
+		feiniuMessage := cap.FeiniuBusMessage{
+			MetaData: cap.FeiniuBusMessageMetaData{
+				TransactionID: transactionID,
+				MessageID:     cap.NewID(),
+			},
+			Content: jsonStr,
+		}
+
+		messageContent := json.Marshal(feiniuMessage)
+
+		result, err := dbTransaction.Exec(statement, val.Name, messageContent, 0, time.Now(), nil, "Scheduled", feiniuMessage.MetaData.MessageID, transactionID)
+
+		if err != nil {
+			if publihser.IsCapOpenedTrans{
+				_ = dbTransaction.Rollback()
+				_ = dbConnection.Close()
+			}
+			return err
+		}
+		affectedRows, err := result.RowsAffected()
+		if err != nil {
+			if publihser.IsCapOpenedTrans{
+				_ = dbTransaction.Rollback()
+				_ = dbConnection.Close()
+			}
+			return err
+		}
+		if affectedRows == int64(0) {
+			if publihser.IsCapOpenedTrans{
+				_ = dbTransaction.Rollback()
+				_ = dbConnection.Close()
+			}
+			return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
+		}
 	}
 
 	if publihser.IsCapOpenedTrans {
@@ -62,6 +107,14 @@ func (publihser *MySqlPublisher) Publish(name string, content string, connection
 			return err
 		}
 	}
+}
 
-	return nil
+func (publisher *MySqlPublisher) PublishOne(name string, content interface{}, connection interface{}, transaction interface{}) error {
+	descriptors := make([]*cap.MessageDescriptor,0)
+	descriptors = append(descriptors,&cap.MessageDescriptor{
+		Name: name,
+		Content: content
+	})
+	err := publisher.Publish(descriptors,connection,transaction)
+	return err
 }
