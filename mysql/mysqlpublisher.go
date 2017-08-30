@@ -114,6 +114,8 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 			return err
 		}
 	}
+
+	return nil
 }
 
 func (publisher *MySqlPublisher) PublishOne(name string, content interface{}, connection interface{}, transaction interface{}) error {
