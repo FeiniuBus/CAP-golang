@@ -83,7 +83,9 @@ func (fetchedMessage *MySqlFetchedMessage) keepAlive() {
 	for _ = range fetchedMessage.ticker.C {
 		fetchedMessage.mutext.Lock()
 		rows, _ := fetchedMessage.dbConnection.Query(statement)
-		_ = rows.Close()
+		if rows != nil {
+			_ = rows.Close()
+		}
 		fetchedMessage.mutext.Unlock()
 	}
 }
