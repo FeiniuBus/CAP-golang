@@ -38,7 +38,7 @@ func (factory *LoggerFactory) Register(delegate *LogDelegate) {
 func (factory *LoggerFactory) CreateLogger(i interface{}) ILogger {
 	t := reflect.TypeOf(i)
 	logger := &DefaultLogger{
-		TypeName:  t.Name(),
+		TypeName:  t.String(),
 		delegates: factory.delegates,
 	}
 	return logger
