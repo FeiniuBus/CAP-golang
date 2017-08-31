@@ -283,7 +283,7 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 		return err
 	}
 
-	result, err := conn.Exec(statement, message.Name, message.Group, feiniuMessage.Content, message.Retries, time.Now(), nil, message.StatusName, feiniuMessage.MetaData.MessageID, feiniuMessage.MetaData.TransactionID)
+	result, err := conn.Exec(statement, message.Name, message.Group, message.Content, message.Retries, time.Now(), nil, message.StatusName, feiniuMessage.MetaData.MessageID, feiniuMessage.MetaData.TransactionID)
 	if err != nil {
 		connection.logger.Log(cap.LevelError, "[StoreReceivedMessage]"+err.Error())
 		return err
