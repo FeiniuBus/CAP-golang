@@ -71,7 +71,7 @@ func (fetchedMessage *MySqlFetchedMessage) keepAlive() {
 	statement := "SELECT 1;"
 	for _ = range fetchedMessage.ticker.C {
 		fetchedMessage.mutext.Lock()
-		_, _ = fetchedMessage.dbTransaction.Exec(statement)
+		_, _ = fetchedMessage.dbConnection.Exec(statement)
 		fetchedMessage.mutext.Unlock()
 	}
 }
