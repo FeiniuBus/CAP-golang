@@ -6,7 +6,7 @@ import "fmt"
 func UseConsoleLog(logger *LoggerFactory) {
 	console := &LogDelegate{
 		Log: func(level LogLevel, message string) {
-			fmt.Println(string(level) + ":::" + message)
+			fmt.Println(level.GetName() + ":::" + message)
 		},
 	}
 	logger.Register(console)
