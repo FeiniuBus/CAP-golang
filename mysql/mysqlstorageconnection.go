@@ -162,6 +162,8 @@ func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() 
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
+
 	message := &cap.CapPublishedMessage{}
 	if rows.Next() {
 		rows.Scan(&message.Id, &message.Added, &message.Content, &message.ExpiresAt, &message.LastWarnedTime, &message.MessageId, &message.Name, &message.Retries, &message.StatusName, &message.TransactionId)

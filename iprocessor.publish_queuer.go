@@ -21,6 +21,9 @@ func NewPublishQueuer(capOptions *CapOptions, storageConnectionFactory *StorageC
 func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessResult, error) {
 	var message *CapPublishedMessage
 	connection, err := processor.StorageConnectionFactory.CreateStorageConnection(processor.Options)
+	if err != nil {
+		return nil, err
+	}
 
 	for {
 		if context.IsStopping {
@@ -45,10 +48,10 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		if err != nil {
 			return nil, err
 		}
+		defer transaction.Dispose()
 
 		err = processor.StateChanger.ChangePublishedMessage(message, state, transaction)
 		if err != nil {
-			transaction.Dispose()
 			return nil, err
 		}
 
@@ -56,8 +59,6 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		if err != nil {
 			return nil, err
 		}
-
-		transaction.Dispose()
 
 		err = context.ThrowIfStopping()
 		if err != nil {
