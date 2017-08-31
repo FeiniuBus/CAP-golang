@@ -5,6 +5,7 @@ type DefaultDispatcher struct {
 	StorageConnectionFactory *StorageConnectionFactory
 	CapOptions               *CapOptions
 	QueueExecutorFactory     IQueueExecutorFactory
+	logger                   ILogger
 }
 
 // NewDefaultDispatcher ...
@@ -12,11 +13,13 @@ func NewDefaultDispatcher(capOptions *CapOptions,
 	storageConnectionFactory *StorageConnectionFactory,
 	factory IQueueExecutorFactory,
 ) IProcessor {
-	return &DefaultDispatcher{
+	dispatcher := &DefaultDispatcher{
 		StorageConnectionFactory: storageConnectionFactory,
 		CapOptions:               capOptions,
 		QueueExecutorFactory:     factory,
 	}
+	dispatcher.logger = GetLoggerFactory().CreateLogger(dispatcher)
+	return dispatcher
 }
 
 // Process ...
@@ -24,11 +27,13 @@ func (dispatcher *DefaultDispatcher) Process(context *ProcessingContext) (*Proce
 	for {
 		err := context.ThrowIfStopping()
 		if err != nil {
+			dispatcher.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
 
 		worked, err := dispatcher.ProcessCore(context)
 		if err != nil {
+			dispatcher.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
 
@@ -49,11 +54,13 @@ func (dispatcher *DefaultDispatcher) step(context *ProcessingContext) (bool, err
 
 	conn, err := dispatcher.StorageConnectionFactory.CreateStorageConnection(dispatcher.CapOptions)
 	if err != nil {
+		dispatcher.logger.Log(LevelError, "[step]"+err.Error())
 		return false, err
 	}
 
 	fetched, err := conn.FetchNextMessage()
 	if err != nil {
+		dispatcher.logger.Log(LevelError, "[step]"+err.Error())
 		return false, err
 	}
 	defer fetched.Dispose()
@@ -72,6 +79,7 @@ func (dispatcher *DefaultDispatcher) step(context *ProcessingContext) (bool, err
 	queueExecutor := dispatcher.QueueExecutorFactory.GetInstance(messageType)
 	err = queueExecutor.Execute(conn, fetched)
 	if err != nil {
+		dispatcher.logger.Log(LevelError, "[step]"+err.Error())
 		return false, err
 	}
 
