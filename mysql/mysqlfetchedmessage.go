@@ -68,10 +68,10 @@ func (fetchedMessage *MySqlFetchedMessage) Dispose() error {
 }
 
 func (fetchedMessage *MySqlFetchedMessage) keepAlive() {
-	statement := "SELECT 1;"
-	for _ = range fetchedMessage.ticker.C {
-		fetchedMessage.mutext.Lock()
-		_, _ = fetchedMessage.dbConnection.Exec(statement)
-		fetchedMessage.mutext.Unlock()
-	}
+	// statement := "SELECT 1;"
+	// for _ = range fetchedMessage.ticker.C {
+	// 	fetchedMessage.mutext.Lock()
+	// 	_, _ = fetchedMessage.dbConnection.Exec(statement)
+	// 	fetchedMessage.mutext.Unlock()
+	// }
 }
