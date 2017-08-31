@@ -7,7 +7,6 @@ import (
 type CapOptions struct{
 	ConnectionString string
 	PoolingDelay time.Duration
-	LogFunction func(message string,level ILogLevel)
 }
 
 func NewCapOptions() *CapOptions{
