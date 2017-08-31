@@ -13,12 +13,14 @@ import (
 // MySqlStorageConnection ...
 type MySqlStorageConnection struct {
 	Options *cap.CapOptions
+	logger  cap.ILogger
 }
 
 // NewStorageConnection ...
 func NewStorageConnection(options *cap.CapOptions) cap.IStorageConnection {
 	connection := &MySqlStorageConnection{}
 	connection.Options = options
+	connection.logger = cap.GetLoggerFactory().CreateLogger(connection)
 	return connection
 }
 
@@ -26,11 +28,13 @@ func NewStorageConnection(options *cap.CapOptions) cap.IStorageConnection {
 func (connection MySqlStorageConnection) OpenDbConnection() (*sql.DB, error) {
 	connectionString, err := connection.Options.GetConnectionString()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[OpenDbConnection]"+err.Error())
 		return nil, err
 	}
 	conn, err := sql.Open("mysql", connectionString)
 
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[OpenDbConnection]"+err.Error())
 		return nil, err
 	}
 	return conn, nil
@@ -41,6 +45,7 @@ func (connection MySqlStorageConnection) BeginTransaction(dbConnection *sql.DB) 
 	options := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
 	transaction, err := dbConnection.BeginTx(context.Background(), options)
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[BeginTransaction]"+err.Error())
 		return nil, err
 	}
 	return transaction, nil
@@ -50,6 +55,7 @@ func (connection MySqlStorageConnection) BeginTransaction(dbConnection *sql.DB) 
 func (connection *MySqlStorageConnection) CreateTransaction() (cap.IStorageTransaction, error) {
 	transaction, err := NewStorageTransaction(connection.Options)
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[CreateTransaction]"+err.Error())
 		return nil, err
 	}
 	return transaction, nil
@@ -59,12 +65,14 @@ func (connection *MySqlStorageConnection) CreateTransaction() (cap.IStorageTrans
 func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessage, error) {
 	conn, err := connection.OpenDbConnection()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[FetchNextMessage]"+err.Error())
 		return nil, err
 	}
 
 	transaction, err := connection.BeginTransaction(conn)
 	if err != nil {
 		conn.Close()
+		connection.logger.Log(cap.LevelError, "[FetchNextMessage]"+err.Error())
 		return nil, err
 	}
 
@@ -74,6 +82,7 @@ func (connection *MySqlStorageConnection) FetchNextMessage() (cap.IFetchedMessag
 	defer row.Close()
 	if err != nil {
 		conn.Close()
+		connection.logger.Log(cap.LevelError, "[FetchNextMessage]"+err.Error())
 		return nil, err
 	}
 
@@ -95,6 +104,7 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetFailedPublishedMessages]"+err.Error())
 		return nil, err
 	}
 
@@ -103,6 +113,7 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 	rows, err := conn.Query(statement)
 	defer rows.Close()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetFailedPublishedMessages]"+err.Error())
 		return nil, err
 	}
 
@@ -110,6 +121,7 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 		item := &cap.CapPublishedMessage{}
 		err = rows.Scan(&item.Id, &item.Added, &item.Content, &item.ExpiresAt, &item.LastWarnedTime, &item.MessageId, &item.Name, &item.Retries, &item.StatusName, &item.TransactionId)
 		if err != nil {
+			connection.logger.Log(cap.LevelError, "[GetFailedPublishedMessages]"+err.Error())
 			return nil, err
 		}
 		returnValue = append(returnValue, item)
@@ -123,6 +135,7 @@ func (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.Ca
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetFailedPublishedMessages]"+err.Error())
 		return nil, err
 	}
 
@@ -131,6 +144,7 @@ func (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.Ca
 	rows, err := conn.Query(statement)
 
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetFailedPublishedMessages]"+err.Error())
 		return nil, err
 	}
 
@@ -138,6 +152,7 @@ func (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.Ca
 		item := &cap.CapReceivedMessage{}
 		err = rows.Scan(&item.Id, &item.Added, &item.Content, &item.ExpiresAt, &item.Group, &item.LastWarnedTime, &item.MessageId, &item.Name, &item.Retries, &item.StatusName, &item.TransactionId)
 		if err != nil {
+			connection.logger.Log(cap.LevelError, "[GetFailedPublishedMessages]"+err.Error())
 			return nil, err
 		}
 		returnValue = append(returnValue, item)
@@ -151,15 +166,19 @@ func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() 
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetNextPublishedMessageToBeEnqueued]"+err.Error())
 		return nil, err
 	}
 
 	if conn == nil {
-		return nil, cap.NewCapError("Database connection is nil.")
+		err = cap.NewCapError("Database connection is nil.")
+		connection.logger.Log(cap.LevelError, "[GetNextPublishedMessageToBeEnqueued]"+err.Error())
+		return nil, err
 	}
 
 	rows, err := conn.Query(statement)
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetNextPublishedMessageToBeEnqueued]"+err.Error())
 		return nil, err
 	}
 	defer rows.Close()
@@ -178,12 +197,15 @@ func (connection *MySqlStorageConnection) GetNextReceviedMessageToBeEnqueued() (
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetNextReceviedMessageToBeEnqueued]"+err.Error())
 		return nil, err
 	}
 	rows, err := conn.Query(statement)
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetNextReceviedMessageToBeEnqueued]"+err.Error())
 		return nil, err
 	}
+	defer rows.Close()
 	message := &cap.CapReceivedMessage{}
 
 	if rows.Next() {
@@ -199,12 +221,15 @@ func (connection *MySqlStorageConnection) GetPublishedMessage(id int) (*cap.CapP
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetPublishedMessage]"+err.Error())
 		return nil, err
 	}
 	rows, err := conn.Query(statement, id)
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetPublishedMessage]"+err.Error())
 		return nil, err
 	}
+	defer rows.Close()
 	message := &cap.CapPublishedMessage{}
 
 	if rows.Next() {
@@ -220,12 +245,15 @@ func (connection *MySqlStorageConnection) GetReceivedMessage(id int) (*cap.CapRe
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetReceivedMessage]"+err.Error())
 		return nil, err
 	}
 	rows, err := conn.Query(statement, id)
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetReceivedMessage]"+err.Error())
 		return nil, err
 	}
+	defer rows.Close()
 	message := &cap.CapReceivedMessage{}
 
 	if rows.Next() {
@@ -242,6 +270,7 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 	conn, err := connection.OpenDbConnection()
 	defer conn.Close()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[StoreReceivedMessage]"+err.Error())
 		return err
 	}
 
@@ -250,19 +279,24 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 	}
 	err = json.Unmarshal([]byte(message.Content), &feiniuMessage)
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[StoreReceivedMessage]"+err.Error())
 		return err
 	}
 
 	result, err := conn.Exec(statement, message.Name, message.Group, feiniuMessage.Content, message.Retries, time.Now(), nil, message.StatusName, feiniuMessage.MetaData.MessageID, feiniuMessage.MetaData.TransactionID)
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[StoreReceivedMessage]"+err.Error())
 		return err
 	}
 	rowAffected, err := result.RowsAffected()
 	if err != nil {
+		connection.logger.Log(cap.LevelError, "[StoreReceivedMessage]"+err.Error())
 		return err
 	}
 	if rowAffected == int64(0) {
-		return cap.NewCapError("StoreReceivedMessage : Database execution should affect 1 row but affected 0 row actually.")
+		err = cap.NewCapError("StoreReceivedMessage : Database execution should affect 1 row but affected 0 row actually.")
+		connection.logger.Log(cap.LevelError, "[StoreReceivedMessage]"+err.Error())
+		return err
 	}
 	return nil
 }

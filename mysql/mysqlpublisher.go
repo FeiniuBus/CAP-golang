@@ -13,12 +13,14 @@ import (
 type MySqlPublisher struct {
 	Options          *cap.CapOptions
 	IsCapOpenedTrans bool
+	logger           cap.ILogger
 }
 
 // NewPublisher ..
 func NewPublisher(options *cap.CapOptions) cap.IPublisher {
 	pubisher := &MySqlPublisher{}
 	pubisher.Options = options
+	pubisher.logger = cap.GetLoggerFactory().CreateLogger(pubisher)
 	return pubisher
 }
 
@@ -34,14 +36,17 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 	if connection == nil {
 		connectionString, err := publisher.Options.GetConnectionString()
 		if err != nil {
+			publisher.logger.Log(cap.LevelError, "[Publish]"+err.Error())
 			return err
 		}
 		dbConnection, err = sql.Open("mysql", connectionString)
 		if err != nil {
+			publisher.logger.Log(cap.LevelError, "[Publish]"+err.Error())
 			return err
 		}
 		dbTransaction, err = dbConnection.Begin()
 		if err != nil {
+			publisher.logger.Log(cap.LevelError, "[Publish]"+err.Error())
 			return err
 		}
 		publisher.IsCapOpenedTrans = true
@@ -62,6 +67,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 				_ = dbTransaction.Rollback()
 				_ = dbConnection.Close()
 			}
+			publisher.logger.Log(cap.LevelError, "[Publish]"+err.Error())
 			return err
 		}
 		feiniuMessage := cap.FeiniuBusMessage{
@@ -79,6 +85,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 				_ = dbTransaction.Rollback()
 				_ = dbConnection.Close()
 			}
+			publisher.logger.Log(cap.LevelError, "[Publish]"+err.Error())
 			return err
 		}
 
@@ -89,6 +96,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 				_ = dbTransaction.Rollback()
 				_ = dbConnection.Close()
 			}
+			publisher.logger.Log(cap.LevelError, "[Publish]"+err.Error())
 			return err
 		}
 		affectedRows, err := result.RowsAffected()
@@ -97,6 +105,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 				_ = dbTransaction.Rollback()
 				_ = dbConnection.Close()
 			}
+			publisher.logger.Log(cap.LevelError, "[Publish]"+err.Error())
 			return err
 		}
 		if affectedRows == int64(0) {
@@ -104,7 +113,9 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 				_ = dbTransaction.Rollback()
 				_ = dbConnection.Close()
 			}
-			return cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
+			err = cap.NewCapError("Database execution should affect 1 row but affected 0 row actually.")
+			publisher.logger.Log(cap.LevelError, "[Publish]"+err.Error())
+			return err
 		}
 	}
 
@@ -112,6 +123,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 		err := dbTransaction.Commit()
 		_ = dbConnection.Close()
 		if err != nil {
+			publisher.logger.Log(cap.LevelError, "[Publish]"+err.Error())
 			return err
 		}
 	}
@@ -119,6 +131,7 @@ func (publisher *MySqlPublisher) Publish(descriptors []*cap.MessageDescriptor, c
 	return nil
 }
 
+// PublishOne ...
 func (publisher *MySqlPublisher) PublishOne(name string, content interface{}, connection interface{}, transaction interface{}) error {
 	descriptors := make([]*cap.MessageDescriptor, 0)
 	descriptors = append(descriptors, &cap.MessageDescriptor{
@@ -126,5 +139,8 @@ func (publisher *MySqlPublisher) PublishOne(name string, content interface{}, co
 		Content: content,
 	})
 	err := publisher.Publish(descriptors, connection, transaction)
+	if err != nil {
+		publisher.logger.Log(cap.LevelError, "[PublishOne]"+err.Error())
+	}
 	return err
 }

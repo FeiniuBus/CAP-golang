@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	cap "github.com/FeiniuBus/capgo"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -16,6 +17,7 @@ type MySqlFetchedMessage struct {
 	dbTransaction *sql.Tx
 	mutext        *sync.Mutex
 	ticker        *time.Ticker
+	logger        cap.ILogger
 }
 
 // NewFetchedMessage ...
@@ -27,6 +29,7 @@ func NewFetchedMessage(_messageId int, _messageType int, _dbConnection *sql.DB, 
 	result.dbTransaction = _dbTransaction
 	result.mutext = &sync.Mutex{}
 	result.ticker = time.NewTicker(1 * time.Minute)
+	result.logger = cap.GetLoggerFactory().CreateLogger(result)
 	go result.keepAlive()
 	return result
 }
@@ -46,6 +49,9 @@ func (fetchedMessage *MySqlFetchedMessage) RemoveFromQueue() error {
 	fetchedMessage.mutext.Lock()
 	err := fetchedMessage.dbTransaction.Commit()
 	fetchedMessage.mutext.Unlock()
+	if err != nil {
+		fetchedMessage.logger.Log(cap.LevelError, err.Error())
+	}
 	return err
 }
 
@@ -54,6 +60,9 @@ func (fetchedMessage *MySqlFetchedMessage) Requeue() error {
 	fetchedMessage.mutext.Lock()
 	err := fetchedMessage.dbTransaction.Rollback()
 	fetchedMessage.mutext.Unlock()
+	if err != nil {
+		fetchedMessage.logger.Log(cap.LevelError, err.Error())
+	}
 	return err
 }
 
@@ -63,7 +72,9 @@ func (fetchedMessage *MySqlFetchedMessage) Dispose() error {
 	fetchedMessage.ticker.Stop()
 	err := fetchedMessage.dbConnection.Close()
 	fetchedMessage.mutext.Unlock()
-
+	if err != nil {
+		fetchedMessage.logger.Log(cap.LevelError, err.Error())
+	}
 	return err
 }
 
