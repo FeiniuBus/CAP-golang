@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"log"
 	"sync"
 	"time"
 
@@ -64,14 +65,18 @@ func (fetchedMessage *MySqlFetchedMessage) Dispose() error {
 	err := fetchedMessage.dbConnection.Close()
 	fetchedMessage.mutext.Unlock()
 
+	if err != nil {
+		log.Printf(err.Error())
+	}
+
 	return err
 }
 
 func (fetchedMessage *MySqlFetchedMessage) keepAlive() {
-	// statement := "SELECT 1;"
-	// for _ = range fetchedMessage.ticker.C {
-	// 	fetchedMessage.mutext.Lock()
-	// 	_, _ = fetchedMessage.dbConnection.Exec(statement)
-	// 	fetchedMessage.mutext.Unlock()
-	// }
+	statement := "SELECT 1;"
+	for _ = range fetchedMessage.ticker.C {
+		fetchedMessage.mutext.Lock()
+		_, _ = fetchedMessage.dbConnection.Exec(statement)
+		fetchedMessage.mutext.Unlock()
+	}
 }
