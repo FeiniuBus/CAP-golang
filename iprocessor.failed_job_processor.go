@@ -5,29 +5,35 @@ type FailedJobProcessor struct {
 	Options                  *CapOptions
 	StateChanger             IStateChanger
 	StorageConnectionFactory *StorageConnectionFactory
+	logger                   ILogger
 }
 
 // NewFailedJobProcessor...
 func NewFailedJobProcessor(capOptions *CapOptions, storageConnectionFactory *StorageConnectionFactory) IProcessor {
-	return &FailedJobProcessor{
+	processor := &FailedJobProcessor{
 		Options:                  capOptions,
 		StorageConnectionFactory: storageConnectionFactory,
 		StateChanger:             NewStateChanger(),
 	}
+	processor.logger = GetLoggerFactory().CreateLogger(processor)
+	return processor
 }
 
 // Process ...
 func (processor *FailedJobProcessor) Process(context *ProcessingContext) (*ProcessResult, error) {
 	connection, err := processor.StorageConnectionFactory.CreateStorageConnection(processor.Options)
 	if err != nil {
+		processor.logger.Log(LevelError, "[Process]"+err.Error())
 		return nil, err
 	}
 	err = processor.ProcessPublishedMessage(connection)
 	if err != nil {
+		processor.logger.Log(LevelError, "[Process]"+err.Error())
 		return nil, err
 	}
 	err = processor.ProcessReceivedMessage(connection)
 	if err != nil {
+		processor.logger.Log(LevelError, "[Process]"+err.Error())
 		return nil, err
 	}
 
@@ -39,6 +45,7 @@ func (processor *FailedJobProcessor) ProcessPublishedMessage(connection IStorage
 	hasException := false
 	messages, err := connection.GetFailedPublishedMessages()
 	if err != nil {
+		processor.logger.Log(LevelError, "[ProcessPublishedMessage]"+err.Error())
 		return err
 	}
 	length := len(messages)
@@ -49,15 +56,18 @@ func (processor *FailedJobProcessor) ProcessPublishedMessage(connection IStorage
 		}
 		transaction, err := connection.CreateTransaction()
 		if err != nil {
+			processor.logger.Log(LevelError, "[ProcessPublishedMessage]"+err.Error())
 			return err
 		}
 		err = processor.StateChanger.ChangePublishedMessage(message, NewEnqueuedState(), transaction)
 		if err != nil {
 			transaction.Dispose()
+			processor.logger.Log(LevelError, "[ProcessPublishedMessage]"+err.Error())
 			return err
 		}
 		err = transaction.Commit()
 		if err != nil {
+			processor.logger.Log(LevelError, "[ProcessPublishedMessage]"+err.Error())
 			return err
 		}
 	}
@@ -69,6 +79,7 @@ func (processor *FailedJobProcessor) ProcessReceivedMessage(connection IStorageC
 	hasException := false
 	messages, err := connection.GetFailedReceivedMessages()
 	if err != nil {
+		processor.logger.Log(LevelError, "[ProcessReceivedMessage]"+err.Error())
 		return err
 	}
 	length := len(messages)
@@ -79,15 +90,18 @@ func (processor *FailedJobProcessor) ProcessReceivedMessage(connection IStorageC
 		}
 		transaction, err := connection.CreateTransaction()
 		if err != nil {
+			processor.logger.Log(LevelError, "[ProcessReceivedMessage]"+err.Error())
 			return err
 		}
 		err = processor.StateChanger.ChangeReceivedMessageState(message, NewEnqueuedState(), transaction)
 		if err != nil {
 			transaction.Dispose()
+			processor.logger.Log(LevelError, "[ProcessReceivedMessage]"+err.Error())
 			return err
 		}
 		err = transaction.Commit()
 		if err != nil {
+			processor.logger.Log(LevelError, "[ProcessReceivedMessage]"+err.Error())
 			return err
 		}
 	}

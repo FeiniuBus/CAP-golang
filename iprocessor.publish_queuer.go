@@ -5,6 +5,7 @@ type PublishQueuer struct {
 	StateChanger             IStateChanger
 	Options                  *CapOptions
 	StorageConnectionFactory *StorageConnectionFactory
+	logger                   ILogger
 }
 
 // NewPublishQueuer bla.
@@ -14,6 +15,7 @@ func NewPublishQueuer(capOptions *CapOptions, storageConnectionFactory *StorageC
 		StorageConnectionFactory: storageConnectionFactory,
 		StateChanger:             NewStateChanger(),
 	}
+	publisher.logger = GetLoggerFactory().CreateLogger(publisher)
 	return publisher
 }
 
@@ -31,12 +33,14 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		}
 		message, err = connection.GetNextPublishedMessageToBeEnqueued()
 		if err != nil {
+			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
 
 		if message == nil || message.Id == 0 {
 			err = context.ThrowIfStopping()
 			if err != nil {
+				processor.logger.Log(LevelError, "[Process]"+err.Error())
 				return nil, err
 			}
 
@@ -46,22 +50,26 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		state := NewEnqueuedState()
 		transaction, err := connection.CreateTransaction()
 		if err != nil {
+			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
 		defer transaction.Dispose()
 
 		err = processor.StateChanger.ChangePublishedMessage(message, state, transaction)
 		if err != nil {
+			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
 
 		err = transaction.Commit()
 		if err != nil {
+			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
 
 		err = context.ThrowIfStopping()
 		if err != nil {
+			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
 	}

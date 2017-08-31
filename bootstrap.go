@@ -17,6 +17,7 @@ type Bootstrapper struct {
 	ConnectionFactory    *StorageConnectionFactory
 	QueueExecutorFactory IQueueExecutorFactory
 	WaitGroup            *sync.WaitGroup
+	logger               ILogger
 }
 
 // NewBootstrapper implements to instantiate an instance of Bootstrapper.
@@ -31,6 +32,8 @@ func NewBootstrapper(
 		Register:          NewCallbackRegister(),
 		ConnectionFactory: connectionFactory,
 	}
+
+	rtv.logger = GetLoggerFactory().CreateLogger(rtv)
 
 	initBootstrapper(rtv)
 
