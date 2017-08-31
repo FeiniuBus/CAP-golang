@@ -15,6 +15,6 @@ var mutext *sync.Mutex
 // Log ...
 func (logger *DefaultLogger) Log(level LogLevel, message string) {
 	for _, val := range logger.delegates {
-		val.Log(level, message)
+		val.Log(level, logger.TypeName+"->"+message)
 	}
 }
