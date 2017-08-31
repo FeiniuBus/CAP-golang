@@ -35,3 +35,8 @@ func (logger *DefaultLogger) Log(level LogLevel, message string) {
 		val.Log(level, message)
 	}
 }
+
+// Register ...
+func (logger *DefaultLogger) Register(delegate *LogDelegate) {
+	logger.delegates = append(logger.delegates, delegate)
+}

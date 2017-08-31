@@ -9,4 +9,5 @@ func UseConsoleLog(logger ILogger) {
 			fmt.Println(string(level) + " : " + message)
 		},
 	}
+	logger.Register(console)
 }
