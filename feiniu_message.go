@@ -9,5 +9,5 @@ type FeiniuBusMessage struct {
 // FeiniuBusMessageMetaData ...
 type FeiniuBusMessageMetaData struct {
 	TransactionID int64 `json:"transaction_id,string"`
-	MessageID     int64 `json:"message_id"`
+	MessageID     int64 `json:"message_id,string"`
 }
