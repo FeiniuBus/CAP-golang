@@ -71,7 +71,6 @@ func (fetchedMessage *MySqlFetchedMessage) Dispose() error {
 	fetchedMessage.mutext.Lock()
 	fetchedMessage.ticker.Stop()
 	err := fetchedMessage.dbConnection.Close()
-	fetchedMessage.dbTransaction.Rollback()
 	fetchedMessage.mutext.Unlock()
 	if err != nil {
 		fetchedMessage.logger.Log(cap.LevelError, err.Error())
