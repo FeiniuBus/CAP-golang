@@ -1,46 +1,58 @@
 package cap
 
+// QueueExecutorPublish ...
 type QueueExecutorPublish struct {
 	IQueueExecutor
 	StateChanger    IStateChanger
 	PublishDelegate IPublishDelegate
+	logger          ILogger
 }
 
+// NewQueueExecutorPublish ...
 func NewQueueExecutorPublish(stateChanger IStateChanger, delegate IPublishDelegate) *QueueExecutorPublish {
-	return &QueueExecutorPublish{
+	executor := &QueueExecutorPublish{
 		StateChanger:    stateChanger,
 		PublishDelegate: delegate,
 	}
+	executor.logger = GetLoggerFactory().CreateLogger(executor)
+	return executor
 }
 
-func (this *QueueExecutorPublish) Execute(connection IStorageConnection, feched IFetchedMessage) error {
+// Execute ...
+func (executor *QueueExecutorPublish) Execute(connection IStorageConnection, feched IFetchedMessage) error {
 	message, err := connection.GetPublishedMessage(feched.GetMessageId())
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
 	transaction, err := connection.CreateTransaction()
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 	defer transaction.Dispose()
 
-	err = this.StateChanger.ChangePublishedMessage(message, NewProcessingState(), transaction)
+	err = executor.StateChanger.ChangePublishedMessage(message, NewProcessingState(), transaction)
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
 	err = transaction.Commit()
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
-	err = this.PublishDelegate.Publish(message.Name, message.Content)
+	err = executor.PublishDelegate.Publish(message.Name, message.Content)
 
 	var newState IState = nil
 	if err != nil {
-		shouldRetry, err := this.UpdateMessageForRetry(message, connection)
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
+		shouldRetry, err := executor.UpdateMessageForRetry(message, connection)
 		if err != nil {
+			executor.logger.Log(LevelError, "[Execute]"+err.Error())
 			return err
 		}
 
@@ -55,33 +67,39 @@ func (this *QueueExecutorPublish) Execute(connection IStorageConnection, feched 
 
 	transaction, err = connection.CreateTransaction()
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 	defer transaction.Dispose()
 
-	err = this.StateChanger.ChangePublishedMessage(message, newState, transaction)
+	err = executor.StateChanger.ChangePublishedMessage(message, newState, transaction)
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
 	err = transaction.Commit()
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
 	err = feched.RemoveFromQueue()
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func (this *QueueExecutorPublish) UpdateMessageForRetry(message *CapPublishedMessage, connection IStorageConnection) (bool, error) {
+// UpdateMessageForRetry ...
+func (executor *QueueExecutorPublish) UpdateMessageForRetry(message *CapPublishedMessage, connection IStorageConnection) (bool, error) {
 	retryBehavior := DefaultRetry
 
 	message.Retries = message.Retries + 1
 	if message.Retries >= int(retryBehavior.RetryCount) {
+		executor.logger.Log(LevelError, "[UpdateMessageForRetry]"+err.Error())
 		return false, nil
 	}
 

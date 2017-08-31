@@ -1,25 +1,33 @@
 package cap
 
+// QueueExecutorSubscribe ...
 type QueueExecutorSubscribe struct {
 	IQueueExecutor
 	Register *CallbackRegister
+	logger   ILogger
 }
 
+// NewQueueExecutorSubscribe ..
 func NewQueueExecutorSubscribe(register *CallbackRegister) *QueueExecutorSubscribe {
-	return &QueueExecutorSubscribe{
+	executor := &QueueExecutorSubscribe{
 		Register: register,
 	}
+	executor.logger = GetLoggerFactory().CreateLogger(executor)
+	return executor
 }
 
-func (this *QueueExecutorSubscribe) Execute(connection IStorageConnection, feched IFetchedMessage) error {
+// Execute ...
+func (executor *QueueExecutorSubscribe) Execute(connection IStorageConnection, feched IFetchedMessage) error {
 	message, err := connection.GetReceivedMessage(feched.GetMessageId())
 	if err != nil {
+		executor.logger.LogData(LevelError, "[Execute]"+err.Error(), message)
 		return err
 	}
 
 	stateChanger := NewStateChanger()
 	transaction, err := connection.CreateTransaction()
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
@@ -27,19 +35,22 @@ func (this *QueueExecutorSubscribe) Execute(connection IStorageConnection, feche
 
 	err = stateChanger.ChangeReceivedMessageState(message, NewProcessingState(), transaction)
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
 	err = transaction.Commit()
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
 	var newState IState
-	err = this.executeSubscribeAsync(message)
+	err = executor.executeSubscribeAsync(message)
 	if err != nil {
-		shouldRetry, err := this.updateMessageForRetryAsync(message, connection)
+		shouldRetry, err := executor.updateMessageForRetryAsync(message, connection)
 		if err != nil {
+			executor.logger.Log(LevelError, "[Execute]"+err.Error())
 			return err
 		}
 
@@ -54,37 +65,42 @@ func (this *QueueExecutorSubscribe) Execute(connection IStorageConnection, feche
 
 	transaction, err = connection.CreateTransaction()
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 	defer transaction.Dispose()
 
 	err = stateChanger.ChangeReceivedMessageState(message, newState, transaction)
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
 	err = transaction.Commit()
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
 	err = feched.RemoveFromQueue()
 	if err != nil {
+		executor.logger.Log(LevelError, "[Execute]"+err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func (this *QueueExecutorSubscribe) executeSubscribeAsync(receivedMessage *CapReceivedMessage) error {
-	cb, err := this.Register.Get(receivedMessage.Group, receivedMessage.Name)
+func (executor *QueueExecutorSubscribe) executeSubscribeAsync(receivedMessage *CapReceivedMessage) error {
+	cb, err := executor.Register.Get(receivedMessage.Group, receivedMessage.Name)
 	if err != nil {
+		executor.logger.Log(LevelError, "[executeSubscribeAsync]"+err.Error())
 		return nil
 	}
 	return cb.Handle(receivedMessage)
 }
 
-func (this *QueueExecutorSubscribe) updateMessageForRetryAsync(receivedMessage *CapReceivedMessage, conn IStorageConnection) (bool, error) {
+func (executor *QueueExecutorSubscribe) updateMessageForRetryAsync(receivedMessage *CapReceivedMessage, conn IStorageConnection) (bool, error) {
 	retryBehavior := DefaultRetry
 	receivedMessage.Retries = receivedMessage.Retries + 1
 	if receivedMessage.Retries >= int(retryBehavior.RetryCount) {
@@ -96,17 +112,20 @@ func (this *QueueExecutorSubscribe) updateMessageForRetryAsync(receivedMessage *
 
 	transaction, err := conn.CreateTransaction()
 	if err != nil {
+		executor.logger.Log(LevelError, "[updateMessageForRetryAsync]"+err.Error())
 		return false, err
 	}
 
 	err = transaction.UpdateReceivedMessage(receivedMessage)
 	if err != nil {
 		transaction.Dispose()
+		executor.logger.Log(LevelError, "[updateMessageForRetryAsync]"+err.Error())
 		return false, err
 	}
 
 	err = transaction.Commit()
 	if err != nil {
+		executor.logger.Log(LevelError, "[updateMessageForRetryAsync]"+err.Error())
 		return false, err
 	}
 
