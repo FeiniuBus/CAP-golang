@@ -77,7 +77,7 @@ func (fetchedMessage *MySqlFetchedMessage) Requeue() error {
 func (fetchedMessage *MySqlFetchedMessage) Dispose() error {
 	fetchedMessage.mutext.Lock()
 	fetchedMessage.ticker.Stop()
-	if fetchedMessage.checkRollbackOrCommit() != nil {
+	if fetchedMessage.checkRollbackOrCommit() == nil {
 		err := fetchedMessage.dbTransaction.Rollback()
 		if err != nil {
 			fetchedMessage.logger.Log(cap.LevelError, err.Error())
