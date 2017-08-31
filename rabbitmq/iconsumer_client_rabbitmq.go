@@ -118,6 +118,12 @@ func handleReceive(client *RabbitMQConsumerClient, deliveries <-chan amqp.Delive
 	go func(deliveries <-chan amqp.Delivery, done <-chan bool) {
 		for {
 			select {
+			case <-done:
+				break
+			default:
+			}
+
+			select {
 			case delivery := <-deliveries:
 				context := cap.MessageContext{
 					Group:   client.QueueName,
@@ -126,14 +132,11 @@ func handleReceive(client *RabbitMQConsumerClient, deliveries <-chan amqp.Delive
 					Tag:     delivery.DeliveryTag,
 				}
 
-				log.Println("receive message " + context.Name)
-
 				if client.OnReceive != nil {
 					client.OnReceive(context)
 				}
 
-			case <-done:
-				return
+			default:
 			}
 		}
 	}(deliveries, done)
