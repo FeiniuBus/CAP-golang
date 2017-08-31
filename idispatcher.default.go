@@ -56,12 +56,11 @@ func (dispatcher *DefaultDispatcher) step(context *ProcessingContext) (bool, err
 	if err != nil {
 		return false, err
 	}
+	defer fetched.Dispose()
 
 	if fetched.GetMessageId() == 0 {
 		return false, nil
 	}
-
-	defer fetched.Dispose()
 
 	var messageType string
 	if fetched.GetMessageType() == 0 {
