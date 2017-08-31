@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"errors"
 	"sync"
 	"time"
 
@@ -18,6 +19,8 @@ type MySqlFetchedMessage struct {
 	mutext        *sync.Mutex
 	ticker        *time.Ticker
 	logger        cap.ILogger
+	rollback      bool
+	commit        bool
 }
 
 // NewFetchedMessage ...
@@ -30,6 +33,8 @@ func NewFetchedMessage(_messageId int, _messageType int, _dbConnection *sql.DB, 
 	result.mutext = &sync.Mutex{}
 	result.ticker = time.NewTicker(1 * time.Minute)
 	result.logger = cap.GetLoggerFactory().CreateLogger(result)
+	result.rollback = false
+	result.commit = false
 	go result.keepAlive()
 	return result
 }
@@ -48,6 +53,7 @@ func (fetchedMessage *MySqlFetchedMessage) GetMessageType() (messageType int) {
 func (fetchedMessage *MySqlFetchedMessage) RemoveFromQueue() error {
 	fetchedMessage.mutext.Lock()
 	err := fetchedMessage.dbTransaction.Commit()
+	fetchedMessage.commit = true
 	fetchedMessage.mutext.Unlock()
 	if err != nil {
 		fetchedMessage.logger.Log(cap.LevelError, err.Error())
@@ -59,6 +65,7 @@ func (fetchedMessage *MySqlFetchedMessage) RemoveFromQueue() error {
 func (fetchedMessage *MySqlFetchedMessage) Requeue() error {
 	fetchedMessage.mutext.Lock()
 	err := fetchedMessage.dbTransaction.Rollback()
+	fetchedMessage.rollback = true
 	fetchedMessage.mutext.Unlock()
 	if err != nil {
 		fetchedMessage.logger.Log(cap.LevelError, err.Error())
@@ -70,12 +77,30 @@ func (fetchedMessage *MySqlFetchedMessage) Requeue() error {
 func (fetchedMessage *MySqlFetchedMessage) Dispose() error {
 	fetchedMessage.mutext.Lock()
 	fetchedMessage.ticker.Stop()
+	if fetchedMessage.checkRollbackOrCommit() != nil {
+		err := fetchedMessage.dbTransaction.Rollback()
+		if err != nil {
+			fetchedMessage.logger.Log(cap.LevelError, err.Error())
+		}
+	}
 	err := fetchedMessage.dbConnection.Close()
 	fetchedMessage.mutext.Unlock()
 	if err != nil {
 		fetchedMessage.logger.Log(cap.LevelError, err.Error())
 	}
 	return err
+}
+
+func (fetchedMessage *MySqlFetchedMessage) checkRollbackOrCommit() error {
+	if fetchedMessage.rollback {
+		return errors.New("Transcation has been rollbacked")
+	}
+
+	if fetchedMessage.commit {
+		return errors.New("transaction has been commited")
+	}
+
+	return nil
 }
 
 func (fetchedMessage *MySqlFetchedMessage) keepAlive() {
