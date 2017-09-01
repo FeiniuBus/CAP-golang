@@ -261,6 +261,7 @@ func (connection *MySqlStorageConnection) GetReceivedMessage(id int) (*cap.CapRe
 	return message, nil
 }
 
+// GetNextLockedMessageToBeEnqueued ...
 func (connection *MySqlStorageConnection) GetNextLockedMessageToBeEnqueued(messageType int32) (cap.ILockedMessage, error) {
 	conn, err := connection.OpenDbConnection()
 	if err != nil {
@@ -274,7 +275,7 @@ func (connection *MySqlStorageConnection) GetNextLockedMessageToBeEnqueued(messa
 		connection.logger.LogData(cap.LevelError, "[GetNextLockedMessageToBeEnqueued]"+err.Error(), struct{ MessageType int32 }{MessageType: messageType})
 		return nil, err
 	}
-	var message interface{}
+	var message cap.ILockedMessage
 	if messageType == 0 {
 		message, err = connection.getNextPublishedLockedMessageToBeEnqueued(conn, transaction)
 		if err != nil {
@@ -305,8 +306,7 @@ func (connection *MySqlStorageConnection) GetNextLockedMessageToBeEnqueued(messa
 		return nil, nil
 	}
 
-	lockedMessage := NewLockedMessage(message, messageType, conn, transaction, connection.Options)
-	return lockedMessage, nil
+	return message, nil
 }
 
 func (connection *MySqlStorageConnection) getNextReceivedLockedMessageToBeEnqueued(conn *sql.DB, transaction *sql.Tx) (cap.ILockedMessage, error) {
@@ -385,4 +385,94 @@ func (connection *MySqlStorageConnection) StoreReceivedMessage(message *cap.CapR
 		return err
 	}
 	return nil
+}
+
+// GetFailedPublishedLockedMessages ...
+func (connection *MySqlStorageConnection) GetFailedPublishedLockedMessages(conn *sql.DB, transaction *sql.Tx) (cap.ILockedMessages, error) {
+	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime,  `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `StatusName` = 'Failed' FOR UPDATE;"
+
+	returnValue := NewLockedMessages(0, conn, transaction, connection.Options)
+
+	rows, err := transaction.Query(statement)
+	defer rows.Close()
+	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetFailedPublishedLockedMessages]"+err.Error())
+		return nil, err
+	}
+
+	for rows.Next() {
+		item := &cap.CapPublishedMessage{}
+		err = rows.Scan(&item.Id, &item.Added, &item.Content, &item.ExpiresAt, &item.LastWarnedTime, &item.MessageId, &item.Name, &item.Retries, &item.StatusName, &item.TransactionId)
+		if err != nil {
+			connection.logger.Log(cap.LevelError, "[GetFailedPublishedLockedMessages]"+err.Error())
+			return nil, err
+		}
+		returnValue.AppendMessage(item)
+	}
+
+	return returnValue, nil
+}
+
+// GetFailedReceivedMessages ...
+func (connection *MySqlStorageConnection) GetFailedReceivedLockedMessages(conn *sql.DB, transaction *sql.Tx) (cap.ILockedMessages, error) {
+	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, `Group`, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Failed' FOR UPDATE;"
+	returnValue := NewLockedMessages(1, conn, transaction, connection.Options)
+
+	rows, err := conn.Query(statement)
+
+	if err != nil {
+		connection.logger.Log(cap.LevelError, "[GetFailedReceivedLockedMessages]"+err.Error())
+		return nil, err
+	}
+
+	for rows.Next() {
+		item := &cap.CapReceivedMessage{}
+		err = rows.Scan(&item.Id, &item.Added, &item.Content, &item.ExpiresAt, &item.Group, &item.LastWarnedTime, &item.MessageId, &item.Name, &item.Retries, &item.StatusName, &item.TransactionId)
+		if err != nil {
+			connection.logger.Log(cap.LevelError, "[GetFailedReceivedLockedMessages]"+err.Error())
+			return nil, err
+		}
+		returnValue.AppendMessage(item)
+	}
+	return returnValue, nil
+}
+
+// GetFailedLockedMessages ...
+func (connection *MySqlStorageConnection) GetFailedLockedMessages(messageType int32) (cap.ILockedMessages, error) {
+	conn, err := connection.OpenDbConnection()
+	if err != nil {
+		connection.logger.LogData(cap.LevelError, err.Error(), struct{ MessageType int32 }{MessageType: messageType})
+		return nil, err
+	}
+	transaction, err := connection.BeginTransaction(conn)
+	if err != nil {
+		conn.Close()
+		connection.logger.LogData(cap.LevelError, err.Error(), struct{ MessageType int32 }{MessageType: messageType})
+		return nil, err
+	}
+	if messageType == 0 {
+		messages, err := connection.GetFailedPublishedLockedMessages(conn, transaction)
+		if err != nil {
+			transaction.Rollback()
+			conn.Close()
+			connection.logger.LogData(cap.LevelError, err.Error(), struct{ MessageType int32 }{MessageType: messageType})
+			return nil, err
+		}
+		return messages, nil
+	} else if messageType == 1 {
+		messages, err := connection.GetFailedReceivedLockedMessages(conn, transaction)
+		if err != nil {
+			transaction.Rollback()
+			conn.Close()
+			connection.logger.LogData(cap.LevelError, err.Error(), struct{ MessageType int32 }{MessageType: messageType})
+			return nil, err
+		}
+		return messages, nil
+	} else {
+		err = cap.NewCapError("Unknown MessageType.")
+		transaction.Rollback()
+		conn.Close()
+		connection.logger.LogData(cap.LevelError, err.Error(), struct{ MessageType int32 }{MessageType: messageType})
+		return nil, err
+	}
 }

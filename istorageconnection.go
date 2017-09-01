@@ -20,4 +20,6 @@ type IStorageConnection interface {
 	StoreReceivedMessage(message *CapReceivedMessage) error
 
 	GetNextLockedMessageToBeEnqueued(messageType int32) (ILockedMessage, error)
+
+	GetFailedLockedMessages(messageType int32) (ILockedMessages, error)
 }

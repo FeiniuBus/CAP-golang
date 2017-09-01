@@ -9,4 +9,5 @@ type ILockedMessages interface {
 	ChangeStates(state IState) error
 	GetMessages() []ILockedMessage
 	GetMessageType() int32
+	AppendMessage(i interface{})
 }

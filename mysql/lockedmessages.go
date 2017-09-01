@@ -17,12 +17,7 @@ type LockedMessages struct {
 }
 
 // NewLockedMessages ...
-func NewLockedMessages(messages []interface{}, messageType int32, dbConnection *sql.DB, dbTransaction *sql.Tx, capOptions *cap.CapOptions) cap.ILockedMessages {
-
-	if messages == nil || len(messages) == 0 {
-		return nil
-	}
-
+func NewLockedMessages(messageType int32, dbConnection *sql.DB, dbTransaction *sql.Tx, capOptions *cap.CapOptions) cap.ILockedMessages {
 	lockedMessages := &LockedMessages{
 		messageType:   messageType,
 		dbConnection:  dbConnection,
@@ -30,16 +25,6 @@ func NewLockedMessages(messages []interface{}, messageType int32, dbConnection *
 		capOptions:    capOptions,
 	}
 	lockedMessages.logger = cap.GetLoggerFactory().CreateLogger(lockedMessages)
-
-	for _, val := range messages {
-		lockedMessages.messages = append(lockedMessages.messages,
-			NewLockedMessage(val,
-				lockedMessages.messageType,
-				lockedMessages.dbConnection,
-				lockedMessages.dbTransaction,
-				lockedMessages.capOptions))
-
-	}
 
 	return lockedMessages
 }
@@ -110,4 +95,9 @@ func (message *LockedMessages) ChangeStates(state cap.IState) error {
 		}
 	}
 	return nil
+}
+
+// AppendMessage ...
+func (message *LockedMessages) AppendMessage(i interface{}) {
+	message.messages = append(message.messages, NewLockedMessage(i, message.messageType, message.dbConnection, message.dbTransaction, message.capOptions))
 }
