@@ -1,12 +1,12 @@
 package cap
 
-// ILockedMessage ...
-type ILockedMessage interface {
+// ILockedMessages
+type ILockedMessages interface {
 	Prepare(statement string) (stmt interface{}, err error)
 	Commit() error
 	Rollback() error
 	Dispose()
-	GetMessage() interface{}
+	ChangeStates(state IState) error
+	GetMessages() []ILockedMessage
 	GetMessageType() int32
-	ChangeState(state IState) error
 }

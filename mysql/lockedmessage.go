@@ -81,48 +81,12 @@ func (message *LockedMessage) Dispose() {
 	}
 }
 
-func (message *LockedMessage) getMessageId() int {
-	if message.messageType == 0 {
-		return message.message.(cap.CapPublishedMessage).Id
-	} else if message.messageType == 1 {
-		return message.message.(cap.CapReceivedMessage).Id
-	} else {
-		return 0
-	}
-}
-
 func (message *LockedMessage) logError(err string) {
 	message.logger.LogData(cap.LevelError, "[Enqueue]"+err,
 		struct {
 			MessageType int32
 			Message     interface{}
 		}{MessageType: message.messageType, Message: message.message})
-}
-
-// Enqueue ...
-func (message *LockedMessage) Enqueue() (AffectedRows int64, err error) {
-	statement := "INSERT INTO `cap.queue` (`MessageId`, `MessageType`) VALUES (?,?);"
-	messageId := message.getMessageId()
-
-	if messageId == 0 {
-		err := cap.NewCapError("MessageId could not be zero.")
-		message.logError(err.Error())
-		return 0, err
-	}
-
-	result, err := message.dbTransaction.Exec(statement, messageId, message.messageType)
-	if err != nil {
-		message.logError(err.Error())
-		return 0, err
-	}
-
-	affectRows, err := result.RowsAffected()
-	if err != nil {
-		message.logError(err.Error())
-		return 0, err
-	}
-
-	return affectRows, nil
 }
 
 // ChangeState ...
