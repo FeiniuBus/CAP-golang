@@ -99,7 +99,6 @@ func (executor *QueueExecutorPublish) UpdateMessageForRetry(message *CapPublishe
 
 	message.Retries = message.Retries + 1
 	if message.Retries >= int(retryBehavior.RetryCount) {
-		executor.logger.Log(LevelError, "[UpdateMessageForRetry]"+err.Error())
 		return false, nil
 	}
 

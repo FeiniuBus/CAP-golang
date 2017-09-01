@@ -133,12 +133,11 @@ func (connection *MySqlStorageConnection) GetFailedPublishedMessages() ([]*cap.C
 func (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.CapReceivedMessage, error) {
 	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, `Group`, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Failed';"
 	conn, err := connection.OpenDbConnection()
-	defer conn.Close()
 	if err != nil {
 		connection.logger.Log(cap.LevelError, "[GetFailedPublishedMessages]"+err.Error())
 		return nil, err
 	}
-
+	defer conn.Close()
 	returnValue := make([]*cap.CapReceivedMessage, 0)
 
 	rows, err := conn.Query(statement)
@@ -164,12 +163,11 @@ func (connection *MySqlStorageConnection) GetFailedReceivedMessages() ([]*cap.Ca
 func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() (*cap.CapPublishedMessage, error) {
 	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
 	conn, err := connection.OpenDbConnection()
-	defer conn.Close()
 	if err != nil {
 		connection.logger.Log(cap.LevelError, "[GetNextPublishedMessageToBeEnqueued]"+err.Error())
 		return nil, err
 	}
-
+	defer conn.Close()
 	if conn == nil {
 		err = cap.NewCapError("Database connection is nil.")
 		connection.logger.Log(cap.LevelError, "[GetNextPublishedMessageToBeEnqueued]"+err.Error())
@@ -195,11 +193,11 @@ func (connection *MySqlStorageConnection) GetNextPublishedMessageToBeEnqueued() 
 func (connection *MySqlStorageConnection) GetNextReceviedMessageToBeEnqueued() (*cap.CapReceivedMessage, error) {
 	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, `Group`, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `StatusName` = 'Scheduled' LIMIT 1;"
 	conn, err := connection.OpenDbConnection()
-	defer conn.Close()
 	if err != nil {
 		connection.logger.Log(cap.LevelError, "[GetNextReceviedMessageToBeEnqueued]"+err.Error())
 		return nil, err
 	}
+	defer conn.Close()
 	rows, err := conn.Query(statement)
 	if err != nil {
 		connection.logger.Log(cap.LevelError, "[GetNextReceviedMessageToBeEnqueued]"+err.Error())
@@ -219,11 +217,11 @@ func (connection *MySqlStorageConnection) GetNextReceviedMessageToBeEnqueued() (
 func (connection *MySqlStorageConnection) GetPublishedMessage(id int) (*cap.CapPublishedMessage, error) {
 	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `Id`=?;"
 	conn, err := connection.OpenDbConnection()
-	defer conn.Close()
 	if err != nil {
 		connection.logger.Log(cap.LevelError, "[GetPublishedMessage]"+err.Error())
 		return nil, err
 	}
+	defer conn.Close()
 	rows, err := conn.Query(statement, id)
 	if err != nil {
 		connection.logger.Log(cap.LevelError, "[GetPublishedMessage]"+err.Error())
@@ -243,11 +241,11 @@ func (connection *MySqlStorageConnection) GetPublishedMessage(id int) (*cap.CapP
 func (connection *MySqlStorageConnection) GetReceivedMessage(id int) (*cap.CapReceivedMessage, error) {
 	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, `Group`, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.received` WHERE `Id`=?;"
 	conn, err := connection.OpenDbConnection()
-	defer conn.Close()
 	if err != nil {
 		connection.logger.Log(cap.LevelError, "[GetReceivedMessage]"+err.Error())
 		return nil, err
 	}
+	defer conn.Close()
 	rows, err := conn.Query(statement, id)
 	if err != nil {
 		connection.logger.Log(cap.LevelError, "[GetReceivedMessage]"+err.Error())
@@ -261,6 +259,94 @@ func (connection *MySqlStorageConnection) GetReceivedMessage(id int) (*cap.CapRe
 	}
 
 	return message, nil
+}
+
+func (connection *MySqlStorageConnection) GetNextLockedMessageToBeEnqueued(messageType int32) (ILockedMessage, error) {
+	conn, err := connection.OpenDbConnection()
+	if err != nil {
+		connection.logger.LogData(cap.LevelError, "[GetNextLockedMessageToBeEnqueued]"+err.Error(), struct{ MessageType int32 }{MessageType: messageType})
+		return nil, err
+	}
+
+	transaction, err := connection.BeginTransaction(conn)
+	if err != nil {
+		conn.Close()
+		connection.logger.LogData(cap.LevelError, "[GetNextLockedMessageToBeEnqueued]"+err.Error(), struct{ MessageType int32 }{MessageType: messageType})
+		return nil, err
+	}
+	var message interface{}
+	if messageType == 0 {
+		message, err = connection.getNextPublishedLockedMessageToBeEnqueued(conn, transaction)
+		if err != nil {
+			transaction.Rollback()
+			conn.Close()
+			connection.logger.LogData(cap.LevelError, "[GetNextLockedMessageToBeEnqueued]"+err.Error(), struct{ MessageType int32 }{MessageType: messageType})
+			return nil, err
+		}
+	} else if messageType == 1 {
+		message, err = connection.getNextReceivedLockedMessageToBeEnqueued(conn, transaction)
+		if err != nil {
+			transaction.Rollback()
+			conn.Close()
+			connection.logger.LogData(cap.LevelError, "[GetNextLockedMessageToBeEnqueued]"+err.Error(), struct{ MessageType int32 }{MessageType: messageType})
+			return nil, err
+		}
+	} else {
+		err = cap.NewCapError("Unknown MessageType.")
+		transaction.Rollback()
+		conn.Close()
+		connection.logger.LogData(cap.LevelError, "[GetNextLockedMessageToBeEnqueued]"+err.Error(), struct{ MessageType int32 }{MessageType: messageType})
+		return nil, err
+	}
+
+	if message == nil {
+		transaction.Rollback()
+		conn.Close()
+		return nil, nil
+	}
+
+	lockedMessage := NewLockedMessage(message, messageType, conn, transaction)
+	return lockedMessage
+}
+
+func (connection *MySqlStorageConnection) getNextReceivedLockedMessageToBeEnqueued(conn *sql.DB, transaction *sql.Tx) (ILockedMessage, error) {
+	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `Id`=?;"
+
+	rows, err := transaction.Query(statement, id)
+	if err != nil {
+		connection.logger.Log(cap.LevelError, "[getNextReceivedLockedMessageToBeEnqueued]"+err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+	message := &cap.CapPublishedMessage{}
+
+	if rows.Next() {
+		rows.Scan(&message.Id, &message.Added, &message.Content, &message.ExpiresAt, &message.LastWarnedTime, &message.MessageId, &message.Name, &message.Retries, &message.StatusName, &message.TransactionId)
+	} else {
+		return nil, nil
+	}
+
+	return NewLockedMessage(message, 0, conn, transaction), nil
+}
+
+func (connection *MySqlStorageConnection) getNextPublishedLockedMessageToBeEnqueued(conn *sql.DB, transaction *sql.Tx) (ILockedMessage, error) {
+	statement := "SELECT `Id`, CONVERT(UNIX_TIMESTAMP(`Added`),SIGNED) AS Added, `Content`, CONVERT(UNIX_TIMESTAMP(`ExpiresAt`),SIGNED) AS ExpiresAt, CONVERT(UNIX_TIMESTAMP(`LastWarnedTime`),SIGNED) AS LastWarnedTime, `MessageId`, `Name`, `Retries`, `StatusName`, `TransactionId` FROM `cap.published` WHERE `Id`=?;"
+
+	rows, err := transaction.Query(statement, id)
+	if err != nil {
+		connection.logger.Log(cap.LevelError, "[getNextPublishedLockedMessageToBeEnqueued]"+err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+	message := &cap.CapPublishedMessage{}
+
+	if rows.Next() {
+		rows.Scan(&message.Id, &message.Added, &message.Content, &message.ExpiresAt, &message.LastWarnedTime, &message.MessageId, &message.Name, &message.Retries, &message.StatusName, &message.TransactionId)
+	} else {
+		return nil, nil
+	}
+
+	return NewLockedMessage(message, 0, conn, transaction), nil
 }
 
 // StoreReceivedMessage ...

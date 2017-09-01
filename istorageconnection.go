@@ -1,23 +1,23 @@
 package cap
 
-type IStorageConnection interface{
+type IStorageConnection interface {
+	CreateTransaction() (IStorageTransaction, error)
 
-	CreateTransaction() (IStorageTransaction,error);
+	FetchNextMessage() (IFetchedMessage, error)
 
-	FetchNextMessage() (IFetchedMessage,error);
+	GetFailedPublishedMessages() ([]*CapPublishedMessage, error)
 
-	GetFailedPublishedMessages() ([]*CapPublishedMessage,error);
+	GetFailedReceivedMessages() ([]*CapReceivedMessage, error)
 
-	GetFailedReceivedMessages() ([]*CapReceivedMessage,error);
+	GetNextPublishedMessageToBeEnqueued() (*CapPublishedMessage, error)
 
-	GetNextPublishedMessageToBeEnqueued() (*CapPublishedMessage,error);
+	GetNextReceviedMessageToBeEnqueued() (*CapReceivedMessage, error)
 
-	GetNextReceviedMessageToBeEnqueued() (*CapReceivedMessage,error);
+	GetPublishedMessage(id int) (*CapPublishedMessage, error)
 
-	GetPublishedMessage(id int) (*CapPublishedMessage, error);
+	GetReceivedMessage(id int) (*CapReceivedMessage, error)
 
-	GetReceivedMessage(id int) (*CapReceivedMessage, error);
+	StoreReceivedMessage(message *CapReceivedMessage) error
 
-	StoreReceivedMessage(message *CapReceivedMessage) error;
-	
+	GetNextLockedMessageToBeEnqueued(messageType int32) (ILockedMessage, error)
 }
