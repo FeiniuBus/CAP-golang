@@ -1,9 +1,5 @@
 package cap
 
-import (
-	"github.com/FeiniuBus/capgo"
-)
-
 // SubscribeQueuer ...
 type SubscribeQueuer struct {
 	Options                  *CapOptions
@@ -39,7 +35,7 @@ func (processor *SubscribeQueuer) Process(context *ProcessingContext) (*ProcessR
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
-		if message == nil || message.GetMessage().(*cap.CapReceivedMessage).Id == 0 {
+		if message == nil || message.GetMessage().(*CapReceivedMessage).Id == 0 {
 			processor.logger.Log(LevelInfomation, "[Process]Message is nil, task canceled.")
 			break
 		}
