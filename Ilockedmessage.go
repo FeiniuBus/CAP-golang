@@ -1,5 +1,6 @@
 package cap
 
+// ILockedMessage ...
 type ILockedMessage interface {
 	Prepare(statement string) (stmt interface{}, err error)
 	Commit() error
@@ -7,4 +8,5 @@ type ILockedMessage interface {
 	Dispose()
 	GetMessage() interface{}
 	GetMessageType() int32
+	Enqueue() (AffectedRows int64, err error)
 }
