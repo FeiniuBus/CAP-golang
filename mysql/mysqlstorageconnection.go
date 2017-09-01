@@ -326,7 +326,11 @@ func (connection *MySqlStorageConnection) getNextReceivedLockedMessageToBeEnqueu
 		return nil, nil
 	}
 
-	return NewLockedMessage(message, 0, conn, transaction, connection.Options), nil
+	if message.Id == 0 {
+		return nil, nil
+	}
+
+	return NewLockedMessage(message, 1, conn, transaction, connection.Options), nil
 }
 
 func (connection *MySqlStorageConnection) getNextPublishedLockedMessageToBeEnqueued(conn *sql.DB, transaction *sql.Tx) (cap.ILockedMessage, error) {
@@ -343,6 +347,10 @@ func (connection *MySqlStorageConnection) getNextPublishedLockedMessageToBeEnque
 	if rows.Next() {
 		rows.Scan(&message.Id, &message.Added, &message.Content, &message.ExpiresAt, &message.LastWarnedTime, &message.MessageId, &message.Name, &message.Retries, &message.StatusName, &message.TransactionId)
 	} else {
+		return nil, nil
+	}
+
+	if message.Id == 0 {
 		return nil, nil
 	}
 
