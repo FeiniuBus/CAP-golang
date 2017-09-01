@@ -318,10 +318,10 @@ func (connection *MySqlStorageConnection) getNextReceivedLockedMessageToBeEnqueu
 		return nil, err
 	}
 	defer rows.Close()
-	message := &cap.CapPublishedMessage{}
+	message := &cap.CapReceivedMessage{}
 
 	if rows.Next() {
-		rows.Scan(&message.Id, &message.Added, &message.Content, &message.ExpiresAt, &message.LastWarnedTime, &message.MessageId, &message.Name, &message.Retries, &message.StatusName, &message.TransactionId)
+		rows.Scan(&message.Id, &message.Added, &message.Content, &message.ExpiresAt, &message.Group, &message.LastWarnedTime, &message.MessageId, &message.Name, &message.Retries, &message.StatusName, &message.TransactionId)
 	} else {
 		return nil, nil
 	}
