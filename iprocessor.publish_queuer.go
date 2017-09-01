@@ -45,8 +45,6 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 			break
 		}
 
-		defer message.Dispose()
-
 		//state := NewEnqueuedState()
 		//transaction, err := connection.CreateTransaction()
 		// if err != nil {
@@ -60,6 +58,7 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		if err != nil {
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			message.Rollback()
+			message.Dispose()
 			return nil, err
 		}
 
@@ -67,14 +66,18 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		err = message.Commit()
 		if err != nil {
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
+			message.Dispose()
 			return nil, err
 		}
 
 		err = context.ThrowIfStopping()
 		if err != nil {
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
+			message.Dispose()
 			return nil, err
 		}
+
+		message.Dispose()
 	}
 	return ProcessSleeping(processor.Options.PoolingDelay), nil
 }
