@@ -15,6 +15,7 @@ type RabbitMQConsumerClient struct {
 	Options       *RabbitMQOptions
 	Connection    *amqp.Connection
 	Channel       *amqp.Channel
+	Logger        cap.ILogger
 
 	OnReceive cap.ReceiveHanlder
 	OnError   cap.ErrorHanlder
@@ -33,6 +34,8 @@ func NewClient(queueName string, options *RabbitMQOptions) *RabbitMQConsumerClie
 		QueueName:     queueName,
 		ConnectString: ConnectString(options),
 	}
+
+	rtv.Logger = cap.GetLoggerFactory().CreateLogger(&rtv)
 
 	rtv.InitClient()
 
@@ -132,6 +135,7 @@ func handleReceive(client *RabbitMQConsumerClient, deliveries <-chan amqp.Delive
 					Tag:     delivery.DeliveryTag,
 				}
 
+				client.Logger.LogData(cap.LevelDebug, "", context)
 				if client.OnReceive != nil {
 					client.OnReceive(context)
 				}

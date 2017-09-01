@@ -1,7 +1,7 @@
 package rabbitmq
 
 import (
-	"github.com/FeiniuBus/capgo"	
+	"github.com/FeiniuBus/capgo"
 )
 
 const (
@@ -11,46 +11,49 @@ const (
 type ConsumerHandlerRabbitMQ struct {
 	cap.IConsumerHandler
 
-	ConsumerClientFactory 	cap.IConsumerClientFactory
-	RabbitOptions 			RabbitMQOptions
-	Register 				*cap.CallbackRegister
-	PollingDelay 			uint32
-	Done					chan bool
-	Clients					[]cap.IConsumerClient
-	ConnectionFactory		*cap.StorageConnectionFactory
-	CapOptions				*cap.CapOptions
+	ConsumerClientFactory cap.IConsumerClientFactory
+	RabbitOptions         RabbitMQOptions
+	Register              *cap.CallbackRegister
+	PollingDelay          uint32
+	Done                  chan bool
+	Clients               []cap.IConsumerClient
+	ConnectionFactory     *cap.StorageConnectionFactory
+	CapOptions            *cap.CapOptions
+	Logger                cap.ILogger
 }
 
 func NewConsumerHandlerRabbitMQ(
 	rabbitOptions RabbitMQOptions,
-	capOptions *cap.CapOptions, 
-	register *cap.CallbackRegister, 
+	capOptions *cap.CapOptions,
+	register *cap.CallbackRegister,
 	connectionFactory *cap.StorageConnectionFactory) *ConsumerHandlerRabbitMQ {
 	clientFactory := NewRabbitConsumeClientFactory(rabbitOptions)
-	
-	rtv := &ConsumerHandlerRabbitMQ {
-		RabbitOptions: rabbitOptions ,
-		ConsumerClientFactory: clientFactory ,
-		Register: register ,
-		PollingDelay: DefaultPollingDelay,
-		Done: make(chan bool) ,
-		Clients: make([]cap.IConsumerClient, 0) ,
-		ConnectionFactory: connectionFactory,
-		CapOptions: capOptions ,
+
+	rtv := &ConsumerHandlerRabbitMQ{
+		RabbitOptions:         rabbitOptions,
+		ConsumerClientFactory: clientFactory,
+		Register:              register,
+		PollingDelay:          DefaultPollingDelay,
+		Done:                  make(chan bool),
+		Clients:               make([]cap.IConsumerClient, 0),
+		ConnectionFactory:     connectionFactory,
+		CapOptions:            capOptions,
 	}
 
-	return rtv 
+	rtv.Logger = cap.GetLoggerFactory().CreateLogger(&rtv)
+
+	return rtv
 }
 
 func (this *ConsumerHandlerRabbitMQ) Start() {
 	for group, groupItems := range this.Register.Routers {
 		client := this.ConsumerClientFactory.Create(group)
-		
+
 		names := []string{}
 		for name, _ := range groupItems {
 			names = append(names, name)
 		}
-		
+
 		this.registerMessageProcessor(client)
 		client.Subscribe(names)
 		client.Listening(60, this.Done)
@@ -66,24 +69,26 @@ func (this *ConsumerHandlerRabbitMQ) Close() {
 }
 
 func (this *ConsumerHandlerRabbitMQ) Pulse() {
-	
+
 }
 
-func (this *ConsumerHandlerRabbitMQ)registerMessageProcessor(client cap.IConsumerClient) {
-	var onReceive cap.ReceiveHanlder = func (ctx cap.MessageContext) {
+func (this *ConsumerHandlerRabbitMQ) registerMessageProcessor(client cap.IConsumerClient) {
+	var onReceive cap.ReceiveHanlder = func(ctx cap.MessageContext) {
 		err := this.storeMessage(&ctx)
 		if err == nil {
 			client.Commit(ctx)
+		} else {
+			this.Logger.LogData(cap.LevelDebug, "fail to save message", &ctx)
 		}
 	}
 
-	var onError cap.ErrorHanlder = func (content string) { }
+	var onError cap.ErrorHanlder = func(content string) {}
 
 	client.SetOnReceive(onReceive)
 	client.SetOnError(onError)
 }
 
-func (this *ConsumerHandlerRabbitMQ)storeMessage(context *cap.MessageContext) error {
+func (this *ConsumerHandlerRabbitMQ) storeMessage(context *cap.MessageContext) error {
 	if this.ConnectionFactory == nil || this.ConnectionFactory.CreateStorageConnection == nil {
 		panic("ConnectionFactory and delegate can not be nil")
 	}
