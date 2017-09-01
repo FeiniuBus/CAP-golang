@@ -24,6 +24,10 @@ func (executor *QueueExecutorSubscribe) Execute(connection IStorageConnection, f
 		return err
 	}
 
+	if message == nil || message.Id == 0 {
+		return nil
+	}
+
 	stateChanger := NewStateChanger()
 	transaction, err := connection.CreateTransaction()
 	if err != nil {

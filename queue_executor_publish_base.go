@@ -26,6 +26,10 @@ func (executor *QueueExecutorPublish) Execute(connection IStorageConnection, fec
 		return err
 	}
 
+	if message == nil || message.Id == 0 {
+		return nil
+	}
+
 	transaction, err := connection.CreateTransaction()
 	if err != nil {
 		executor.logger.Log(LevelError, "[Execute]"+err.Error())
