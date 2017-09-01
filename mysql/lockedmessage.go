@@ -47,8 +47,6 @@ func (message *LockedMessage) GetMessageType() int32 {
 func (message *LockedMessage) Prepare(query string) (stmt interface{}, err error) {
 	statement, err := message.dbTransaction.Prepare(query)
 	if err != nil {
-		message.Rollback()
-		message.Dispose()
 		message.logger.Log(cap.LevelError, "[Prepare]"+err.Error())
 		return nil, err
 	}
@@ -107,8 +105,6 @@ func (message *LockedMessage) Enqueue() (AffectedRows int64, err error) {
 	messageId := message.getMessageId()
 
 	if messageId == 0 {
-		message.Rollback()
-		message.Dispose()
 		err := cap.NewCapError("MessageId could not be zero.")
 		message.logError(err.Error())
 		return 0, err
@@ -116,16 +112,12 @@ func (message *LockedMessage) Enqueue() (AffectedRows int64, err error) {
 
 	result, err := message.dbTransaction.Exec(statement, messageId, message.messageType)
 	if err != nil {
-		message.Rollback()
-		message.Dispose()
 		message.logError(err.Error())
 		return 0, err
 	}
 
 	affectRows, err := result.RowsAffected()
 	if err != nil {
-		message.Rollback()
-		message.Dispose()
 		message.logError(err.Error())
 		return 0, err
 	}
@@ -145,8 +137,6 @@ func (message *LockedMessage) ChangeState(state cap.IState) error {
 		err = cap.NewCapError("Unknown MessageType.")
 	}
 	if err != nil {
-		message.Rollback()
-		message.Dispose()
 		message.logError(err.Error())
 		return err
 	}
