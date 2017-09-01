@@ -26,6 +26,7 @@ func (processor *FailedJobProcessor) Process(context *ProcessingContext) (*Proce
 		processor.logger.Log(LevelError, "[Process]"+err.Error())
 		return nil, err
 	}
+
 	err = processor.ProcessPublishedMessage(connection)
 	if err != nil {
 		processor.logger.Log(LevelError, "[Process]"+err.Error())
@@ -42,68 +43,46 @@ func (processor *FailedJobProcessor) Process(context *ProcessingContext) (*Proce
 
 // ProcessPublishedMessage ...
 func (processor *FailedJobProcessor) ProcessPublishedMessage(connection IStorageConnection) error {
-	hasException := false
-	messages, err := connection.GetFailedPublishedMessages()
+	failedPublishedMessages, err := connection.GetFailedLockedMessages(0)
 	if err != nil {
 		processor.logger.Log(LevelError, "[ProcessPublishedMessage]"+err.Error())
 		return err
 	}
-	length := len(messages)
-	for i := 0; i < length; i++ {
-		message := messages[i]
-		if hasException == false {
-			//TODO: failed callback
-		}
-		transaction, err := connection.CreateTransaction()
-		if err != nil {
-			processor.logger.Log(LevelError, "[ProcessPublishedMessage]"+err.Error())
-			return err
-		}
-		err = processor.StateChanger.ChangePublishedMessage(message, NewEnqueuedState(), transaction)
-		if err != nil {
-			transaction.Dispose()
-			processor.logger.Log(LevelError, "[ProcessPublishedMessage]"+err.Error())
-			return err
-		}
-		err = transaction.Commit()
-		if err != nil {
-			processor.logger.Log(LevelError, "[ProcessPublishedMessage]"+err.Error())
-			return err
-		}
+	defer failedPublishedMessages.Dispose()
+	err = failedPublishedMessages.ChangeStates(NewEnqueuedState())
+	if err != nil {
+		failedPublishedMessages.Rollback()
+		processor.logger.Log(LevelError, "[ProcessPublishedMessage]"+err.Error())
+		return err
+	}
+	err = failedPublishedMessages.Commit()
+	if err != nil {
+		failedPublishedMessages.Rollback()
+		processor.logger.Log(LevelError, "[ProcessPublishedMessage]"+err.Error())
+		return err
 	}
 	return nil
 }
 
 // ProcessReceivedMessage ...
 func (processor *FailedJobProcessor) ProcessReceivedMessage(connection IStorageConnection) error {
-	hasException := false
-	messages, err := connection.GetFailedReceivedMessages()
+	failedReceivedMessages, err := connection.GetFailedLockedMessages(1)
 	if err != nil {
 		processor.logger.Log(LevelError, "[ProcessReceivedMessage]"+err.Error())
 		return err
 	}
-	length := len(messages)
-	for i := 0; i < length; i++ {
-		message := messages[i]
-		if hasException == false {
-			//TODO: failed callback
-		}
-		transaction, err := connection.CreateTransaction()
-		if err != nil {
-			processor.logger.Log(LevelError, "[ProcessReceivedMessage]"+err.Error())
-			return err
-		}
-		err = processor.StateChanger.ChangeReceivedMessageState(message, NewEnqueuedState(), transaction)
-		if err != nil {
-			transaction.Dispose()
-			processor.logger.Log(LevelError, "[ProcessReceivedMessage]"+err.Error())
-			return err
-		}
-		err = transaction.Commit()
-		if err != nil {
-			processor.logger.Log(LevelError, "[ProcessReceivedMessage]"+err.Error())
-			return err
-		}
+	defer failedReceivedMessages.Dispose()
+	err = failedReceivedMessages.ChangeStates(NewEnqueuedState())
+	if err != nil {
+		failedReceivedMessages.Rollback()
+		processor.logger.Log(LevelError, "[ProcessReceivedMessage]"+err.Error())
+		return err
+	}
+	err = failedReceivedMessages.Commit()
+	if err != nil {
+		failedReceivedMessages.Rollback()
+		processor.logger.Log(LevelError, "[ProcessReceivedMessage]"+err.Error())
+		return err
 	}
 	return nil
 }
