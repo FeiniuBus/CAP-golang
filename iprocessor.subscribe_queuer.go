@@ -40,8 +40,6 @@ func (processor *SubscribeQueuer) Process(context *ProcessingContext) (*ProcessR
 			break
 		}
 
-		defer message.Dispose()
-
 		//transaction, err := conn.CreateTransaction()
 		// if err != nil {
 		// 	processor.logger.Log(LevelError, "[Process]"+err.Error())
@@ -55,6 +53,7 @@ func (processor *SubscribeQueuer) Process(context *ProcessingContext) (*ProcessR
 			//transaction.Dispose()
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			message.Rollback()
+			message.Dispose()
 			return nil, err
 		}
 
@@ -62,9 +61,11 @@ func (processor *SubscribeQueuer) Process(context *ProcessingContext) (*ProcessR
 		err = message.Commit()
 		if err != nil {
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
+			message.Dispose()
 			return nil, err
 		}
 		//transaction.Dispose()
+		message.Dispose()
 	}
 	err = context.ThrowIfStopping()
 	if err != nil {
