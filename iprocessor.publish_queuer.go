@@ -21,7 +21,6 @@ func NewPublishQueuer(capOptions *CapOptions, storageConnectionFactory *StorageC
 
 // Process blablabla.
 func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessResult, error) {
-	var message *CapPublishedMessage
 	connection, err := processor.StorageConnectionFactory.CreateStorageConnection(processor.Options)
 	if err != nil {
 		return nil, err
@@ -31,37 +30,41 @@ func (processor *PublishQueuer) Process(context *ProcessingContext) (*ProcessRes
 		if context.IsStopping {
 			break
 		}
-		message, err = connection.GetNextPublishedMessageToBeEnqueued()
+		message, err := connection.GetNextLockedMessageToBeEnqueued(0)
 		if err != nil {
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
 
-		if message == nil || message.Id == 0 {
+		if message == nil || message.GetMessage().(*CapPublishedMessage).Id == 0 {
 			err = context.ThrowIfStopping()
 			if err != nil {
 				processor.logger.Log(LevelError, "[Process]"+err.Error())
 				return nil, err
 			}
-
 			break
 		}
 
-		state := NewEnqueuedState()
-		transaction, err := connection.CreateTransaction()
+		defer message.Dispose()
+
+		//state := NewEnqueuedState()
+		//transaction, err := connection.CreateTransaction()
+		// if err != nil {
+		// 	processor.logger.Log(LevelError, "[Process]"+err.Error())
+		// 	return nil, err
+		// }
+		// defer transaction.Dispose()
+
+		//err = processor.StateChanger.ChangePublishedMessage(message, state, transaction)
+		err = message.ChangeState(NewEnqueuedState())
 		if err != nil {
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
-			return nil, err
-		}
-		defer transaction.Dispose()
-
-		err = processor.StateChanger.ChangePublishedMessage(message, state, transaction)
-		if err != nil {
-			processor.logger.Log(LevelError, "[Process]"+err.Error())
+			message.Rollback()
 			return nil, err
 		}
 
-		err = transaction.Commit()
+		//err = transaction.Commit()
+		err = message.Commit()
 		if err != nil {
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err

@@ -1,5 +1,9 @@
 package cap
 
+import (
+	"github.com/FeiniuBus/capgo"
+)
+
 // SubscribeQueuer ...
 type SubscribeQueuer struct {
 	Options                  *CapOptions
@@ -29,36 +33,42 @@ func (processor *SubscribeQueuer) Process(context *ProcessingContext) (*ProcessR
 		if context.IsStopping {
 			break
 		}
-		message, err := conn.GetNextReceviedMessageToBeEnqueued()
+		//message, err := conn.GetNextReceviedMessageToBeEnqueued()
+		message, err := conn.GetNextLockedMessageToBeEnqueued(1)
 		if err != nil {
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
-		if message == nil || message.Id == 0 {
+		if message == nil || message.GetMessage().(*cap.CapReceivedMessage).Id == 0 {
 			processor.logger.Log(LevelInfomation, "[Process]Message is nil, task canceled.")
 			break
 		}
 
-		transaction, err := conn.CreateTransaction()
+		defer message.Dispose()
+
+		//transaction, err := conn.CreateTransaction()
+		// if err != nil {
+		// 	processor.logger.Log(LevelError, "[Process]"+err.Error())
+		// 	return nil, err
+		// }
+
+		//stateChanger := NewStateChanger()
+		//err = stateChanger.ChangeReceivedMessageState(message, NewEnqueuedState(), transaction)
+		err = message.ChangeState(NewEnqueuedState())
 		if err != nil {
+			//transaction.Dispose()
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
+			message.Rollback()
 			return nil, err
 		}
 
-		stateChanger := NewStateChanger()
-		err = stateChanger.ChangeReceivedMessageState(message, NewEnqueuedState(), transaction)
-		if err != nil {
-			transaction.Dispose()
-			processor.logger.Log(LevelError, "[Process]"+err.Error())
-			return nil, err
-		}
-
-		err = transaction.Commit()
+		//err = transaction.Commit()
+		err = message.Commit()
 		if err != nil {
 			processor.logger.Log(LevelError, "[Process]"+err.Error())
 			return nil, err
 		}
-		transaction.Dispose()
+		//transaction.Dispose()
 	}
 	err = context.ThrowIfStopping()
 	if err != nil {
