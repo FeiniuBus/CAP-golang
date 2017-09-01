@@ -9,4 +9,5 @@ type ILockedMessage interface {
 	GetMessage() interface{}
 	GetMessageType() int32
 	Enqueue() (AffectedRows int64, err error)
+	ChangeState(state IState) error
 }

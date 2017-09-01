@@ -305,7 +305,7 @@ func (connection *MySqlStorageConnection) GetNextLockedMessageToBeEnqueued(messa
 		return nil, nil
 	}
 
-	lockedMessage := NewLockedMessage(message, messageType, conn, transaction)
+	lockedMessage := NewLockedMessage(message, messageType, conn, transaction, connection.Options)
 	return lockedMessage, nil
 }
 
@@ -326,7 +326,7 @@ func (connection *MySqlStorageConnection) getNextReceivedLockedMessageToBeEnqueu
 		return nil, nil
 	}
 
-	return NewLockedMessage(message, 0, conn, transaction), nil
+	return NewLockedMessage(message, 0, conn, transaction, connection.Options), nil
 }
 
 func (connection *MySqlStorageConnection) getNextPublishedLockedMessageToBeEnqueued(conn *sql.DB, transaction *sql.Tx) (cap.ILockedMessage, error) {
@@ -346,7 +346,7 @@ func (connection *MySqlStorageConnection) getNextPublishedLockedMessageToBeEnque
 		return nil, nil
 	}
 
-	return NewLockedMessage(message, 0, conn, transaction), nil
+	return NewLockedMessage(message, 0, conn, transaction, connection.Options), nil
 }
 
 // StoreReceivedMessage ...
